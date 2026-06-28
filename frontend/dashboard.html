@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donor Dashboard | FoodLink AI</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        // ── STRICT ROUTE GUARD ── Redirect unauthenticated users straight to auth.html
+        (function () {
+            const token = localStorage.getItem('foodlink_token');
+            const user = JSON.parse(localStorage.getItem('foodlink_user') || '{}');
+            if (!token || user.role !== 'donor') {
+                localStorage.removeItem('foodlink_token');
+                localStorage.removeItem('foodlink_user');
+                window.location.href = 'auth.html';
+            }
+        })();
+    </script>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar glass" style="padding: 0.8rem 5%;">
+        <a href="index.html" class="logo">
+            <i class="fa-solid fa-leaf"></i> FoodLink
+        </a>
+        <div class="nav-links">
+            <div class="user-profile" id="userProfileNav" style="display: flex; align-items: center; gap: 0.5rem; font-weight: 500;">
+                <div id="userAvatar" style="width: 35px; height: 35px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 1px solid rgba(0,0,0,0.05);">D</div>
+                <span id="userNameNav">Loading...</span>
+            </div>
+            <a href="#" id="logoutBtn" class="btn btn-outline" style="padding: 0.5rem 1rem; margin-left: 1rem;">Sign Out</a>
+        </div>
+    </nav>
+
+    <!-- Sidebar Layout -->
+    <div class="dashboard-layout">
+        <aside class="sidebar" id="sidebar">
+            <ul class="sidebar-menu">
+                <li><a href="dashboard.html" class="active"><i class="fa-solid fa-chart-line"></i> Analytics Overview</a></li>
+                <li><a href="my-donations.html"><i class="fa-solid fa-box-open"></i> My Donations</a></li>
+                <li><a href="ngo-partners.html"><i class="fa-solid fa-handshake"></i> NGO Partners</a></li>
+                <li><a href="#" id="notificationsLink"><i class="fa-solid fa-bell"></i> Notifications <span id="notifCountBadge" style="background: var(--primary); color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.7rem; margin-left: auto; display:none;">0</span></a></li>
+                <li style="margin-top: 2rem;"><a href="donate.html" class="btn btn-primary" style="color: white; justify-content: center; width: 100%;"><i class="fa-solid fa-plus"></i> New Donation</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="dashboard-header">
+                <div>
+                    <h2 id="welcomeMsg" style="font-family:'Outfit';">Welcome back!</h2>
+                    <p style="color: var(--text-muted); font-size: 0.95rem;">Here is your corporate surplus food rescue report.</p>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-icon"><i class="fa-solid fa-utensils"></i></div>
+                    <div class="metric-info">
+                        <h4>Meals Donated</h4>
+                        <p id="statMeals">—</p>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon" style="color: var(--secondary); background: rgba(59, 130, 246, 0.08); border-color: rgba(59,130,246,0.15);"><i class="fa-solid fa-hand-holding-heart"></i></div>
+                    <div class="metric-info">
+                        <h4>NGOs Supported</h4>
+                        <p id="statNgos">—</p>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08); border-color: rgba(245,158,11,0.15);"><i class="fa-solid fa-leaf"></i></div>
+                    <div class="metric-info">
+                        <h4>CO2 Mitigated (kg)</h4>
+                        <p id="statCo2">—</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trend Analytics Card -->
+            <div class="trend-card">
+                <div class="trend-card-header">
+                    <div>
+                        <h3 style="color: var(--text-main); font-family: 'Outfit'; font-size: 1.25rem;">Surplus Recovery Curve</h3>
+                        <p style="color: var(--text-muted); font-size: 0.85rem;">Historical monthly meals rescued trend analysis</p>
+                    </div>
+                    <div style="font-size: 0.85rem; color: var(--primary); font-weight: 600; background: rgba(16, 185, 129, 0.08); padding: 0.35rem 0.75rem; border-radius: var(--radius-md); border: 1px solid rgba(16, 185, 129, 0.12);">
+                        <i class="fa-solid fa-arrow-trend-up"></i> Activity Active
+                    </div>
+                </div>
+                <div style="position: relative;">
+                    <!-- SVG Chart -->
+                    <svg class="chart-svg" viewBox="0 0 600 200" preserveAspectRatio="none" id="trendChartSvg">
+                        <defs>
+                            <linearGradient id="chart-gradient" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="0%" stop-color="var(--primary)" stop-opacity="0.25"/>
+                                <stop offset="100%" stop-color="var(--primary)" stop-opacity="0"/>
+                            </linearGradient>
+                        </defs>
+                        <!-- Grid Lines -->
+                        <line class="chart-grid" x1="50" y1="20" x2="570" y2="20"/>
+                        <line class="chart-grid" x1="50" y1="70" x2="570" y2="70"/>
+                        <line class="chart-grid" x1="50" y1="120" x2="570" y2="120"/>
+                        <line class="chart-grid" x1="50" y1="170" x2="570" y2="170"/>
+                        
+                        <!-- Dynamic path and dots will be drawn here -->
+                        <g id="chartContent">
+                            <path class="chart-area-meals" d="M 50 170 C 150 170, 250 170, 570 170 L 570 170 L 50 170 Z" id="chartAreaPath"/>
+                            <path class="chart-line-meals" d="M 50 170 C 150 170, 250 170, 570 170" id="chartLinePath"/>
+                        </g>
+                    </svg>
+                    <div id="chartTooltip" style="position: absolute; display: none; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); padding: 0.4rem 0.8rem; font-size: 0.8rem; color: var(--text-main); pointer-events: none; transform: translate(-50%, -130%); z-index: 10; box-shadow: var(--shadow-md);"></div>
+                </div>
+            </div>
+
+            <!-- Active Deliveries -->
+            <h3 style="margin-bottom: 1rem; font-family:'Outfit';">Active Logistics Deliveries</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Donation ID</th>
+                            <th>Items</th>
+                            <th>AI Matched NGO</th>
+                            <th>Distance</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="donationsTableBody">
+                        <tr><td colspan="6" style="text-align:center;color:var(--text-muted);">Loading your donations...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- Notification Banner -->
+    <div id="notificationBanner" class="notification-banner">
+        <i class="fa-solid fa-circle-check" style="color: var(--primary); font-size: 1.5rem;"></i>
+        <div>
+            <h4 id="notifBannerTitle" style="margin-bottom: 0.2rem;">Update</h4>
+            <p id="notifBannerText" style="font-size: 0.9rem; color: var(--text-muted);"></p>
+        </div>
+    </div>
+
+    <!-- Notifications Dropdown Panel -->
+    <div id="notificationsPanel" style="display:none; position: fixed; top: 80px; left: 300px; width: 340px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); z-index: 1500; max-height: 400px; overflow-y: auto;">
+        <div style="padding: 1rem; border-bottom: 1px solid var(--border); font-weight: 600;">Recent Platform Activity</div>
+        <div id="notificationsList" style="padding: 0.5rem;">
+            <p style="padding: 1rem; color: var(--text-muted); text-align:center;">Loading notifications...</p>
+        </div>
+    </div>
+
+    <!-- Donation Detail Modal -->
+    <div id="donationModalOverlay" style="display:none; position: fixed; inset: 0; background: rgba(0,0,0,0.4); backdrop-filter: blur(4px); z-index: 2000; align-items: center; justify-content: center;">
+        <div style="background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); max-width: 480px; width: 90%; padding: 2rem; box-shadow: var(--shadow-lg); position: relative;">
+            <button id="closeDonationModal" style="position: absolute; top: 1rem; right: 1rem; background: none; border: none; font-size: 1.2rem; cursor: pointer; color: var(--text-muted);">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+            <h3 style="margin-bottom: 1.5rem; font-family:'Outfit';">Donation Details</h3>
+            <div id="donationModalBody" style="display: flex; flex-direction: column; gap: 0.8rem; color: var(--text-main);">
+                Loading...
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Load user info from localStorage
+        const user = JSON.parse(localStorage.getItem('foodlink_user') || '{}');
+
+        if (!user || !user.name) {
+            window.location.href = 'auth.html';
+        } else {
+            const initials = user.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+            document.getElementById('userAvatar').textContent = initials;
+            document.getElementById('userNameNav').textContent = user.name;
+            document.getElementById('welcomeMsg').textContent = `Welcome back, ${user.name.split(' ')[0]}!`;
+        }
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('foodlink_token');
+            localStorage.removeItem('foodlink_user');
+            window.location.href = 'auth.html';
+        });
+
+        // Load stats and draw dynamic trend chart
+        async function loadStatsAndChart() {
+            try {
+                const data = await apiCall('/donations/my');
+                const donations = data.donations || [];
+
+                const totalMeals = donations.reduce((sum, d) => sum + (d.quantity || 0), 0);
+                const uniqueNgos = new Set(donations.filter(d => d.ngo_id).map(d => d.ngo_id)).size;
+                const co2Saved = Math.round(totalMeals * 0.36); 
+
+                document.getElementById('statMeals').textContent = totalMeals.toLocaleString();
+                document.getElementById('statNgos').textContent = uniqueNgos;
+                document.getElementById('statCo2').textContent = co2Saved.toLocaleString();
+
+                plotDynamicChart(donations);
+            } catch (err) {
+                document.getElementById('statMeals').textContent = '0';
+                document.getElementById('statNgos').textContent = '0';
+                document.getElementById('statCo2').textContent = '0';
+                plotDynamicChart([]);
+            }
+        }
+
+        function plotDynamicChart(donations) {
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const monthlyData = {};
+            
+            const currentMonthIdx = new Date().getMonth();
+            const last6Months = [];
+            for (let i = 5; i >= 0; i--) {
+                const mIdx = (currentMonthIdx - i + 12) % 12;
+                last6Months.push(months[mIdx]);
+                monthlyData[months[mIdx]] = 0;
+            }
+
+            donations.forEach(d => {
+                const date = new Date(d.created_at);
+                const mName = months[date.getMonth()];
+                if (monthlyData[mName] !== undefined) {
+                    monthlyData[mName] += d.quantity || 0;
+                }
+            });
+
+            const chartSvg = document.getElementById('trendChartSvg');
+            const svgWidth = 600;
+            const svgHeight = 200;
+            const paddingLeft = 60;
+            const paddingRight = 30;
+            const paddingTop = 30;
+            const paddingBottom = 40;
+
+            const graphWidth = svgWidth - paddingLeft - paddingRight;
+            const graphHeight = svgHeight - paddingTop - paddingBottom;
+
+            const values = last6Months.map(m => monthlyData[m]);
+            const maxVal = Math.max(...values, 100);
+
+            const points = last6Months.map((m, idx) => {
+                // BUG FIX: when last6Months.length === 1, the divisor is 0, producing NaN
+                // coordinates that silently break the SVG path. Guard with Math.max(1, ...).
+                const divisor = Math.max(last6Months.length - 1, 1);
+                const x = paddingLeft + (idx / divisor) * graphWidth;
+                const y = paddingTop + graphHeight - (monthlyData[m] / maxVal) * graphHeight;
+                return { x, y, month: m, value: monthlyData[m] };
+            });
+
+            const linePathD = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x} ${p.y}`).join(' ');
+            const areaPathD = `${linePathD} L ${points[points.length-1].x} ${svgHeight - paddingBottom} L ${points[0].x} ${svgHeight - paddingBottom} Z`;
+
+            let svgContent = `
+                <defs>
+                    <linearGradient id="chart-gradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stop-color="var(--primary)" stop-opacity="0.25"/>
+                        <stop offset="100%" stop-color="var(--primary)" stop-opacity="0"/>
+                    </linearGradient>
+                </defs>
+                <g opacity="0.6">
+                    <line class="chart-grid" x1="${paddingLeft}" y1="${paddingTop}" x2="${svgWidth - paddingRight}" y2="${paddingTop}"/>
+                    <line class="chart-grid" x1="${paddingLeft}" y1="${paddingTop + graphHeight * 0.33}" x2="${svgWidth - paddingRight}" y2="${paddingTop + graphHeight * 0.33}"/>
+                    <line class="chart-grid" x1="${paddingLeft}" y1="${paddingTop + graphHeight * 0.66}" x2="${svgWidth - paddingRight}" y2="${paddingTop + graphHeight * 0.66}"/>
+                    <line class="chart-grid" x1="${paddingLeft}" y1="${svgHeight - paddingBottom}" x2="${svgWidth - paddingRight}" y2="${svgHeight - paddingBottom}"/>
+                </g>
+                
+                <text class="chart-text" x="${paddingLeft - 15}" y="${paddingTop + 4}" style="text-anchor: end;">${Math.round(maxVal)}</text>
+                <text class="chart-text" x="${paddingLeft - 15}" y="${paddingTop + graphHeight * 0.5 + 4}" style="text-anchor: end;">${Math.round(maxVal/2)}</text>
+                <text class="chart-text" x="${paddingLeft - 15}" y="${svgHeight - paddingBottom + 4}" style="text-anchor: end;">0</text>
+                
+                <path class="chart-area-meals" d="${areaPathD}"/>
+                <path class="chart-line-meals" d="${linePathD}"/>
+            `;
+
+            points.forEach(p => {
+                svgContent += `
+                    <circle class="chart-dot" cx="${p.x}" cy="${p.y}" r="5" 
+                        onmouseover="showTooltip(event, '${p.month}: ${p.value} meals')" 
+                        onmouseout="hideTooltip()"/>
+                    <text class="chart-text" x="${p.x}" y="${svgHeight - 15}">${p.month}</text>
+                `;
+            });
+
+            document.getElementById('chartContent').innerHTML = svgContent;
+        }
+
+        const tooltip = document.getElementById('chartTooltip');
+        function showTooltip(e, text) {
+            const chartBounds = document.getElementById('trendChartSvg').getBoundingClientRect();
+            const hoverX = e.clientX - chartBounds.left;
+            const hoverY = e.clientY - chartBounds.top;
+
+            tooltip.style.left = `${hoverX}px`;
+            tooltip.style.top = `${hoverY}px`;
+            tooltip.textContent = text;
+            tooltip.style.display = 'block';
+        }
+
+        function hideTooltip() {
+            tooltip.style.display = 'none';
+        }
+
+        loadStatsAndChart();
+    </script>
+</body>
+</html>

@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NGO Dashboard | FoodLink AI</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        // ── STRICT ROUTE GUARD ── Redirect unauthenticated or non-NGO users straight to auth.html
+        (function () {
+            const token = localStorage.getItem('foodlink_token');
+            const user = JSON.parse(localStorage.getItem('foodlink_user') || '{}');
+            if (!token || user.role !== 'ngo') {
+                localStorage.removeItem('foodlink_token');
+                localStorage.removeItem('foodlink_user');
+                window.location.href = 'auth.html';
+            }
+        })();
+    </script>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar glass" style="padding: 0.8rem 5%;">
+        <a href="index.html" class="logo">
+            <i class="fa-solid fa-leaf"></i> FoodLink
+        </a>
+        <div class="nav-links">
+            <div style="display:flex;align-items:center;gap:0.5rem;font-weight:500;">
+                <div id="ngoAvatar" style="width:35px;height:35px;border-radius:50%;background:var(--primary);color:white;display:flex;align-items:center;justify-content:center;font-weight:bold;border:1px solid rgba(0,0,0,0.05);">N</div>
+                <span id="ngoNameNav">NGO Panel</span>
+            </div>
+            <a href="#" id="logoutBtn" class="btn btn-outline" style="padding:0.5rem 1rem;margin-left:1rem;">Sign Out</a>
+        </div>
+    </nav>
+
+    <!-- Sidebar Layout -->
+    <div class="dashboard-layout">
+        <aside class="sidebar">
+            <ul class="sidebar-menu">
+                <li><a href="#" id="menuIncoming" class="active" onclick="showSection('incoming')"><i class="fa-solid fa-inbox"></i> New Donations</a></li>
+                <li><a href="#" id="menuAccepted" onclick="showSection('accepted')"><i class="fa-solid fa-truck"></i> Food on the Way</a></li>
+                <li><a href="#" id="menuHistory" onclick="showSection('history')"><i class="fa-solid fa-clock-rotate-left"></i> Past Deliveries</a></li>
+            </ul>
+            <div style="margin-top:2.5rem;padding:1rem;background:rgba(16,185,129,0.05);border-radius:var(--radius-md);border:1px solid var(--border);">
+                <p style="font-size:0.75rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:0.4rem;">System Status</p>
+                <div id="approvalStatus" style="font-weight:600;color:var(--primary);font-size:0.9rem;">✅ Approved & Active</div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Welcome Banner -->
+            <div style="background: rgba(16, 185, 129, 0.1); border: 1px solid rgba(16, 185, 129, 0.2); border-radius: var(--radius-lg); padding: 1.5rem; margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem;">
+                <div style="font-size: 2rem; color: var(--primary);"><i class="fa-solid fa-hand-holding-heart"></i></div>
+                <div>
+                    <h3 style="color: var(--primary); font-family: 'Outfit'; font-size: 1.25rem; margin-bottom: 0.25rem;">Welcome to FoodLink!</h3>
+                    <p style="color: var(--text-main); font-size: 0.95rem;">Watch this space for new food donations from local restaurants. Click 'Accept' when you see a donation you need.</p>
+                </div>
+            </div>
+
+            <!-- Stats overview -->
+            <div class="metrics-grid" style="margin-bottom:2rem;">
+                <div class="metric-card">
+                    <div class="metric-icon"><i class="fa-solid fa-inbox"></i></div>
+                    <div class="metric-info">
+                        <h4>New Donations</h4>
+                        <p id="statAvailable">—</p>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon" style="color:#3b82f6;background:rgba(59,130,246,0.08);border-color:rgba(59,130,246,0.15);"><i class="fa-solid fa-truck"></i></div>
+                    <div class="metric-info">
+                        <h4>Food on the Way</h4>
+                        <p id="statAccepted">—</p>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon" style="color:#f59e0b;background:rgba(245,158,11,0.08);border-color:rgba(245,158,11,0.15);"><i class="fa-solid fa-circle-check"></i></div>
+                    <div class="metric-info">
+                        <h4>Meals Received</h4>
+                        <p id="statTotal">—</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SECTION: INCOMING OFFERS -->
+            <div id="sectionIncoming">
+                <div class="dashboard-header">
+                    <div>
+                        <h2 style="font-family:'Outfit';">Available Food Donations</h2>
+                        <p style="color:var(--text-muted); font-size:0.95rem;">Food donations from nearby restaurants waiting to be accepted.</p>
+                    </div>
+                    <button class="btn btn-outline" onclick="loadIncomingDonations()">
+                        <i class="fa-solid fa-rotate"></i> Refresh List
+                    </button>
+                </div>
+                <div id="incomingDonationsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:1.5rem;">
+                    <p style="color:var(--text-muted);">Syncing pipeline database...</p>
+                </div>
+            </div>
+
+            <!-- SECTION: ACTIVE SHIPMENTS / CHECKLIST -->
+            <div id="sectionAccepted" style="display:none;">
+                <div class="dashboard-header">
+                    <div>
+                        <h2 style="font-family:'Outfit';">Incoming Deliveries</h2>
+                        <p style="color:var(--text-muted); font-size:0.95rem;">Track the food that is currently on the way to your NGO.</p>
+                    </div>
+                </div>
+                
+                <!-- Active Cargo Container -->
+                <div id="activeCargoGrid" style="display:grid; grid-template-columns: 1fr; gap: 1.5rem;">
+                    <p style="color:var(--text-muted);">Syncing cargo states...</p>
+                </div>
+            </div>
+
+            <!-- SECTION: ARCHIVE HISTORY -->
+            <div id="sectionHistory" style="display:none;">
+                <div class="dashboard-header">
+                    <div>
+                        <h2 style="font-family:'Outfit';">Past Deliveries</h2>
+                        <p style="color:var(--text-muted); font-size:0.95rem;">A history of all the food donations you have successfully received.</p>
+                    </div>
+                </div>
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Donation ID</th>
+                                <th>Food Specification</th>
+                                <th>Quantity Rescued</th>
+                                <th>Timestamp Arrivals</th>
+                                <th>Logistics Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTableBody">
+                            <tr><td colspan="5" style="text-align:center;color:var(--text-muted);">Loading historical records...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Notifications Dropdown Panel -->
+    <div id="notificationsPanel" style="display:none; position: fixed; top: 80px; left: 300px; width: 340px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-md); box-shadow: var(--shadow-lg); z-index: 1500; max-height: 400px; overflow-y: auto;">
+        <div style="padding: 1rem; border-bottom: 1px solid var(--border); font-weight: 600;">Recent Platform Activity</div>
+        <div id="notificationsList" style="padding: 0.5rem;">
+            <p style="padding: 1rem; color: var(--text-muted); text-align:center;">Loading notifications...</p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // BUG FIX: use the single API_BASE exported by script.js so this page
+        // never gets out of sync if the base URL changes.  Falls back to
+        // localhost only if script.js hasn't loaded yet (shouldn't happen).
+        const API = (window.FOODLINK_API_BASE || 'http://localhost:5000/api').replace(/\/api$/, ''); 
+        // Re-attach /api so ngoApiCall receives full path like before
+        const _NGO_API = window.FOODLINK_API_BASE || 'http://localhost:5000/api';
+
+        // Auth extraction
+        const user = JSON.parse(localStorage.getItem('foodlink_user') || '{}');
+        const token = localStorage.getItem('foodlink_token');
+
+        // Set user header details
+        if (user.name) {
+            const initials = user.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0,2);
+            document.getElementById('ngoAvatar').textContent = initials;
+            document.getElementById('ngoNameNav').textContent = user.name;
+        }
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('foodlink_token');
+            localStorage.removeItem('foodlink_user');
+            window.location.href = 'auth.html';
+        });
+
+        // Tab switcher
+        function showSection(name) {
+            ['incoming','accepted','history'].forEach(s => {
+                document.getElementById('section' + s.charAt(0).toUpperCase() + s.slice(1)).style.display = s === name ? 'block' : 'none';
+                document.getElementById('menu' + s.charAt(0).toUpperCase() + s.slice(1)).className = s === name ? 'active' : '';
+            });
+            if (name === 'incoming') loadIncomingDonations();
+            if (name === 'accepted') loadAcceptedDonations();
+            if (name === 'history') loadHistory();
+        }
+
+        async function ngoApiCall(endpoint, method = 'GET', body = null) {
+            const options = {
+                method,
+                headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` }
+            };
+            if (body) options.body = JSON.stringify(body);
+            const res = await fetch(`${_NGO_API}${endpoint}`, options);
+            return res.json();
+        }
+
+        // LOAD INCOMING OFFERS
+        async function loadIncomingDonations() {
+            const grid = document.getElementById('incomingDonationsGrid');
+            grid.innerHTML = '<p style="color:var(--text-muted);">Loading offers...</p>';
+            try {
+                const data = await ngoApiCall('/donations');
+                const donations = (data.donations || []).filter(d => d.status === 'pending');
+
+                document.getElementById('statAvailable').textContent = donations.length;
+
+                if (donations.length === 0) {
+                    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--text-muted);padding:3rem;"><i class="fa-solid fa-inbox" style="font-size:3rem;margin-bottom:1rem;display:block;color:var(--border);"></i>There are no food donations available near you right now. We will notify you when someone donates food!</div>';
+                    return;
+                }
+
+                grid.innerHTML = donations.map(d => `
+                    <div class="feature-card" style="text-align:left;">
+                        <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.2rem;">
+                            <div>
+                                <span style="font-size:0.75rem;font-weight:600;color:var(--primary);background:rgba(16,185,129,0.08);padding:0.25rem 0.6rem;border-radius:4px;border:1px solid rgba(16,185,129,0.15);">#FL-${d.id}</span>
+                                <h3 style="margin:0.5rem 0 0;font-size:1.15rem;font-family:'Outfit';">${d.food_type.charAt(0).toUpperCase() + d.food_type.slice(1)}</h3>
+                            </div>
+                            <span class="badge badge-pending">Pending Match</span>
+                        </div>
+                        <div style="display:flex;flex-direction:column;gap:0.5rem;margin-bottom:1.5rem;font-size:0.9rem;color:var(--text-muted);">
+                            <div><i class="fa-solid fa-utensils" style="width:16px;color:var(--primary);"></i> <strong>${d.quantity}</strong> meals equivalent</div>
+                            <div><i class="fa-solid fa-location-dot" style="width:16px;color:var(--primary);"></i> ${d.address || 'Location on acquire'}</div>
+                            ${d.pickup_by ? `<div><i class="fa-solid fa-clock" style="width:16px;color:var(--primary);"></i> Pickup window: ${new Date(d.pickup_by).toLocaleString()}</div>` : ''}
+                            ${d.description ? `<div><i class="fa-solid fa-note-sticky" style="width:16px;color:var(--primary);"></i> Note: ${d.description}</div>` : ''}
+                        </div>
+                        <button class="btn btn-primary" onclick="acceptDonation(${d.id}, this)" style="width:100%;">
+                            <i class="fa-solid fa-check"></i> Accept Dispatch
+                        </button>
+                    </div>
+                `).join('');
+            } catch (err) {
+                grid.innerHTML = '<p style="color:#f43f5e;">Failed to load surplus food pipeline. Please refresh.</p>';
+            }
+        }
+
+        async function acceptDonation(donationId, btn) {
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Engaged...';
+            try {
+                const data = await ngoApiCall(`/donations/${donationId}/accept`, 'PATCH');
+                if (data.message && (data.message.includes('accepted') || data.message.includes('success') || data.matchedNGO)) {
+                    btn.innerHTML = '<i class="fa-solid fa-check"></i> Cargo Matched!';
+                    btn.style.background = '#059669';
+                    
+                    // Initialize checklist cache
+                    initChecklistLocalStorage(donationId);
+                    
+                    setTimeout(() => showSection('accepted'), 1200);
+                    loadStats();
+                } else {
+                    alert(data.message || 'Verification rejected.');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-check"></i> Accept Dispatch';
+                }
+            } catch (err) {
+                alert('Cannot establish secure server bridge.');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Accept Dispatch';
+            }
+        }
+
+        // LOCAL STORAGE CHECKS FOR INTERACTIVE CHECKLIST STEPS
+        function initChecklistLocalStorage(id) {
+            const key = `ngo_checklist_FL_${id}`;
+            if (!localStorage.getItem(key)) {
+                localStorage.setItem(key, JSON.stringify({
+                    step2: false,
+                    step3: false,
+                    step4: false,
+                    step5: false
+                }));
+            }
+        }
+
+        function getChecklistState(id) {
+            const key = `ngo_checklist_FL_${id}`;
+            initChecklistLocalStorage(id);
+            return JSON.parse(localStorage.getItem(key));
+        }
+
+        function setChecklistStep(id, stepKey, val) {
+            const key = `ngo_checklist_FL_${id}`;
+            const state = getChecklistState(id);
+            state[stepKey] = val;
+            localStorage.setItem(key, JSON.stringify(state));
+        }
+
+        // LOAD ACCEPTED CARGO WITH INTERACTIVE CHECKLISTS
+        async function loadAcceptedDonations() {
+            const grid = document.getElementById('activeCargoGrid');
+            grid.innerHTML = '<p style="color:var(--text-muted);">Syncing logistics pipeline...</p>';
+            try {
+                const data = await ngoApiCall('/donations');
+                const active = (data.donations || []).filter(d => d.status === 'matched' || d.status === 'in_transit');
+                document.getElementById('statAccepted').textContent = active.length;
+                
+                if (active.length === 0) {
+                    grid.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:3rem;"><i class="fa-solid fa-truck" style="font-size:3rem;margin-bottom:1rem;display:block;color:var(--border);"></i>No active cargo in dispatch transit.</div>';
+                    return;
+                }
+
+                grid.innerHTML = active.map(d => {
+                    const steps = getChecklistState(d.id);
+                    const isStep2Active = true;
+                    const isStep3Active = steps.step2;
+                    const isStep4Active = steps.step3;
+                    const isStep5Active = steps.step4;
+
+                    return `
+                    <div class="feature-card" style="text-align:left; background:var(--surface); border-color:var(--border);">
+                        <!-- Header row -->
+                        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem; border-bottom:1px solid var(--border); padding-bottom:1rem;">
+                            <div>
+                                <span style="font-size:0.75rem; font-weight:600; color:var(--secondary); background:rgba(59,130,246,0.08); padding:0.25rem 0.6rem; border-radius:4px; border:1px solid rgba(59,130,246,0.15);">FLIGHT ID: #FL-${d.id}</span>
+                                <h3 style="margin:0.4rem 0 0; font-size:1.2rem; font-family:'Outfit';">${d.food_type.charAt(0).toUpperCase() + d.food_type.slice(1)}</h3>
+                            </div>
+                            <span class="badge badge-matched" id="statusBadge-${d.id}">${d.status.replace('_',' ')}</span>
+                        </div>
+                        
+                        <!-- Core info -->
+                        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:1rem; margin-bottom:1.5rem; font-size:0.9rem; color:var(--text-muted);">
+                            <div><strong style="color:var(--text-main);">Cargo Vol:</strong> ${d.quantity} meals</div>
+                            <div><strong style="color:var(--text-main);">Corporate Origin:</strong> ${d.address || '—'}</div>
+                            <div><strong style="color:var(--text-main);">Lock Window:</strong> ${d.pickup_by ? new Date(d.pickup_by).toLocaleString() : '—'}</div>
+                            ${d.description ? `<div style="grid-column: 1/-1;"><strong style="color:var(--text-main);">Notes:</strong> ${d.description}</div>` : ''}
+                        </div>
+
+                        <!-- Interactive cargo checklist component -->
+                        <div class="checklist-wrapper">
+                            <div class="checklist-title">
+                                Logistics Checklist 
+                                <span id="checklistProgress-${d.id}">Progress: ${calculateProgress(steps)}%</span>
+                            </div>
+                            
+                            <!-- Step 1: Accepted -->
+                            <div class="checklist-item checked active">
+                                <label class="checklist-checkbox-wrapper">
+                                    <input type="checkbox" class="checklist-checkbox" checked disabled>
+                                </label>
+                                <div class="checklist-label">
+                                    <span class="checklist-step-title">1. Logistics Offer Accepted</span>
+                                    <span class="checklist-step-desc">Matched and system allocated to your agency.</span>
+                                </div>
+                            </div>
+
+                            <!-- Step 2: Vehicle prep -->
+                            <div class="checklist-item ${steps.step2 ? 'checked' : ''} ${isStep2Active ? 'active' : ''}">
+                                <label class="checklist-checkbox-wrapper">
+                                    <input type="checkbox" class="checklist-checkbox" id="chk2-${d.id}" ${steps.step2 ? 'checked' : ''} onchange="toggleStep(${d.id}, 'step2')">
+                                </label>
+                                <div class="checklist-label">
+                                    <span class="checklist-step-title">2. Dispatch Vehicle Prepared</span>
+                                    <span class="checklist-step-desc">Driver assigned and routing dispatched.</span>
+                                </div>
+                            </div>
+
+                            <!-- Step 3: Food safety quality checks -->
+                            <div class="checklist-item ${steps.step3 ? 'checked' : ''} ${isStep3Active ? 'active' : ''}" id="item3-${d.id}">
+                                <label class="checklist-checkbox-wrapper">
+                                    <input type="checkbox" class="checklist-checkbox" id="chk3-${d.id}" ${steps.step3 ? 'checked' : ''} ${!isStep3Active ? 'disabled' : ''} onchange="toggleStep(${d.id}, 'step3')">
+                                </label>
+                                <div class="checklist-label">
+                                    <span class="checklist-step-title">3. Safety & Quality Inspection Gate</span>
+                                    <span class="checklist-step-desc">Cold chain, seal, and expiration gates verified.</span>
+                                </div>
+                            </div>
+
+                            <!-- Step 4: Out for transit -->
+                            <div class="checklist-item ${steps.step4 ? 'checked' : ''} ${isStep4Active ? 'active' : ''}" id="item4-${d.id}">
+                                <label class="checklist-checkbox-wrapper">
+                                    <input type="checkbox" class="checklist-checkbox" id="chk4-${d.id}" ${steps.step4 ? 'checked' : ''} ${!isStep4Active ? 'disabled' : ''} onchange="toggleStep(${d.id}, 'step4')">
+                                </label>
+                                <div class="checklist-label">
+                                    <span class="checklist-step-title">4. Cargo Picked Up & In Transit</span>
+                                    <span class="checklist-step-desc">Driver departed origin point towards distribution hub.</span>
+                                </div>
+                            </div>
+
+                            <!-- Step 5: Deliveries completed -->
+                            <div class="checklist-item ${steps.step5 ? 'checked' : ''} ${isStep5Active ? 'active' : ''}" id="item5-${d.id}">
+                                <label class="checklist-checkbox-wrapper">
+                                    <input type="checkbox" class="checklist-checkbox" id="chk5-${d.id}" ${steps.step5 ? 'checked' : ''} ${!isStep5Active ? 'disabled' : ''} onchange="toggleStep(${d.id}, 'step5')">
+                                </label>
+                                <div class="checklist-label">
+                                    <span class="checklist-step-title">5. Delivery Arrival & Audit Gate</span>
+                                    <span class="checklist-step-desc">Cargo unloaded safely. Updates system records.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    `;
+                }).join('');
+            } catch (err) {
+                grid.innerHTML = '<p style="color:#f43f5e;">Failed to load active dispatches. Please refresh.</p>';
+            }
+        }
+
+        function calculateProgress(steps) {
+            let count = 1;
+            if (steps.step2) count++;
+            if (steps.step3) count++;
+            if (steps.step4) count++;
+            if (steps.step5) count++;
+            return Math.round((count / 5) * 100);
+        }
+
+        async function toggleStep(id, stepKey) {
+            const chk = document.getElementById(`${chkIdMap(stepKey)}-${id}`);
+            const isChecked = chk.checked;
+            
+            setChecklistStep(id, stepKey, isChecked);
+
+            if (stepKey === 'step4' && isChecked) {
+                const badge = document.getElementById(`statusBadge-${id}`);
+                if (badge) {
+                    badge.textContent = 'in transit';
+                    badge.className = 'badge badge-matched';
+                }
+            }
+
+            if (stepKey === 'step5' && isChecked) {
+                const item = document.getElementById(`item5-${id}`);
+                item.style.opacity = '0.5';
+                try {
+                    const data = await ngoApiCall(`/donations/${id}/complete`, 'PATCH');
+                    alert(`Cargo Flight #FL-${id} successfully arrived, verified, and complete!`);
+                    
+                    localStorage.removeItem(`ngo_checklist_FL_${id}`);
+                    
+                    loadAcceptedDonations();
+                    loadStats();
+                } catch (err) {
+                    alert('Logistics status sync failed.');
+                    chk.checked = false;
+                    setChecklistStep(id, 'step5', false);
+                    item.style.opacity = '1';
+                }
+            } else {
+                loadAcceptedDonations();
+            }
+        }
+
+        function chkIdMap(key) {
+            if (key === 'step2') return 'chk2';
+            if (key === 'step3') return 'chk3';
+            if (key === 'step4') return 'chk4';
+            if (key === 'step5') return 'chk5';
+        }
+
+        // LOAD ARCHIVED ARRIVALS
+        async function loadHistory() {
+            const tbody = document.getElementById('historyTableBody');
+            try {
+                // BUG FIX: use /donations/ngo so history shows only THIS NGO's
+                // completed deliveries, not every donor's completions.
+                // Also removed the statTotal write here — loadStats() owns that
+                // metric; writing it here caused the two to overwrite each other
+                // whenever the user switched between tabs.
+                const data = await ngoApiCall('/donations/ngo');
+                const completed = (data.donations || []).filter(d => d.status === 'completed');
+                if (completed.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--text-muted);">No historical records in archive.</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = completed.map(d => `
+                    <tr>
+                        <td>#FL-${d.id}</td>
+                        <td>${d.food_type.charAt(0).toUpperCase() + d.food_type.slice(1)}</td>
+                        <td><strong>${d.quantity}</strong> meals</td>
+                        <td>${new Date(d.created_at).toLocaleDateString()}</td>
+                        <td><span class="badge badge-completed">Arrived</span></td>
+                    </tr>
+                `).join('');
+            } catch (err) {
+                tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#f43f5e;">Failed to synchronize history.</td></tr>';
+            }
+        }
+
+        async function loadStats() {
+            try {
+                // BUG FIX: was calling /donations which returns ALL platform pending
+                // donations + this NGO's matched ones. That meant "New Donations"
+                // counted every donor's pending submission platform-wide.
+                // /donations/ngo returns only donations matched to THIS NGO,
+                // so we get accurate accepted/completed counts.
+                // For "incoming" (pending) we still use /donations since pending
+                // donations haven't been matched to any NGO yet.
+                const [allData, ngoData] = await Promise.all([
+                    ngoApiCall('/donations'),       // all pending + this NGO's matched
+                    ngoApiCall('/donations/ngo'),    // only this NGO's matched/completed
+                ]);
+                const allDonations = allData.donations || [];
+                const ngoDonations = ngoData.donations || [];
+
+                const incoming        = allDonations.filter(d => d.status === 'pending').length;
+                const accepted        = ngoDonations.filter(d => d.status === 'matched' || d.status === 'in_transit').length;
+                const completedMeals  = ngoDonations.filter(d => d.status === 'completed').reduce((sum, d) => sum + (d.quantity || 0), 0);
+
+                document.getElementById('statAvailable').textContent = incoming;
+                document.getElementById('statAccepted').textContent  = accepted;
+                document.getElementById('statTotal').textContent      = completedMeals.toLocaleString();
+            } catch(err) {
+                document.getElementById('approvalStatus').textContent = 'Error connecting';
+            }
+        }
+
+        // Initialize
+        showSection('incoming');
+        loadStats();
+    </script>
+</body>
+</html>

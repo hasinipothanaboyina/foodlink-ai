@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login | FoodLink AI</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        (function () {
+            const token = localStorage.getItem('foodlink_token');
+            const user  = JSON.parse(localStorage.getItem('foodlink_user') || '{}');
+            if (token && user.role) {
+                if (user.role === 'ngo')   window.location.href = 'ngo-dashboard.html';
+                else if (user.role === 'admin') window.location.href = 'admin.html';
+                else window.location.href = 'dashboard.html';
+            }
+        })();
+    </script>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        body { margin: 0; min-height: 100vh; background: #0a0a0a; }
+        .bg-image {
+            position: fixed; inset: 0;
+            background-image: url('https://images.pexels.com/photos/6646918/pexels-photo-6646918.jpeg?auto=compress&cs=tinysrgb&w=1600');
+            background-size: cover; background-position: center;
+            filter: blur(6px) brightness(0.45); transform: scale(1.05); z-index: 0;
+        }
+        .navbar { position: fixed; top: 0; left: 0; right: 0; z-index: 10; padding: 1rem 2rem; background: rgba(0,0,0,0.3); backdrop-filter: blur(10px); }
+        .logo { color: #4ade80; text-decoration: none; font-size: 1.3rem; font-weight: 700; }
+        .logo i { margin-right: 0.4rem; }
+        .auth-container { position: relative; z-index: 1; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 5rem 1rem 2rem; }
+        .auth-card { background: rgba(255,255,255,0.08); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.15); border-radius: 20px; padding: 2.5rem; width: 100%; max-width: 520px; box-shadow: 0 25px 50px rgba(0,0,0,0.5); }
+        .auth-card h2 { color: #fff; margin: 0 0 0.3rem; font-size: 1.7rem; font-weight: 700; }
+        .auth-card .subtitle { color: rgba(255,255,255,0.55); margin: 0 0 1.5rem; font-size: 0.95rem; }
+        .tab-row { display: flex; margin-bottom: 1.8rem; background: rgba(255,255,255,0.07); border-radius: 10px; padding: 4px; }
+        .tab-btn { flex: 1; padding: 0.6rem; background: none; border: none; border-radius: 8px; font-size: 0.95rem; font-weight: 600; cursor: pointer; color: rgba(255,255,255,0.45); transition: all 0.2s; font-family: inherit; }
+        .tab-btn.active { background: #16a34a; color: #fff; }
+        .form-group { margin-bottom: 1rem; }
+        .form-group label { display: block; color: rgba(255,255,255,0.8); font-size: 0.875rem; font-weight: 500; margin-bottom: 0.4rem; }
+        .form-control { width: 100%; padding: 0.75rem 1rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 10px; color: #fff; font-size: 0.95rem; box-sizing: border-box; transition: border 0.2s; font-family: inherit; }
+        .form-control:focus { outline: none; border-color: #16a34a; background: rgba(255,255,255,0.15); }
+        .form-control::placeholder { color: rgba(255,255,255,0.3); }
+        .form-control option { background: #1a1a1a; color: #fff; }
+        .password-wrapper { position: relative; }
+        .password-wrapper .form-control { padding-right: 2.8rem; }
+        .toggle-pw { position: absolute; right: 0.9rem; top: 50%; transform: translateY(-50%); background: none; border: none; color: rgba(255,255,255,0.4); cursor: pointer; font-size: 0.95rem; padding: 0; }
+        .toggle-pw:hover { color: rgba(255,255,255,0.8); }
+
+        /* Password strength meter */
+        .pw-strength { margin-top: 0.5rem; }
+        .pw-strength-bar { height: 4px; border-radius: 2px; background: rgba(255,255,255,0.1); margin-bottom: 0.35rem; overflow: hidden; }
+        .pw-strength-fill { height: 100%; width: 0%; border-radius: 2px; transition: width 0.3s, background 0.3s; }
+        .pw-rules { display: flex; flex-direction: column; gap: 0.2rem; }
+        .pw-rule { font-size: 0.75rem; display: flex; align-items: center; gap: 0.4rem; color: rgba(255,255,255,0.4); transition: color 0.2s; }
+        .pw-rule.met { color: #4ade80; }
+        .pw-rule i { width: 12px; }
+
+        .role-selector { display: flex; gap: 0.75rem; margin-bottom: 1.2rem; }
+        .role-card { flex: 1; padding: 1rem 0.5rem; background: rgba(255,255,255,0.07); border: 2px solid rgba(255,255,255,0.15); border-radius: 12px; text-align: center; cursor: pointer; transition: all 0.2s; color: rgba(255,255,255,0.6); }
+        .role-card:hover { border-color: rgba(255,255,255,0.35); }
+        .role-card.selected { border-color: #16a34a; background: rgba(22,163,74,0.15); color: #fff; }
+        .role-card i { font-size: 1.5rem; display: block; margin-bottom: 0.4rem; }
+        .role-card span { font-size: 0.85rem; font-weight: 600; }
+        .section-divider { color: rgba(255,255,255,0.4); font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.08em; margin: 1.2rem 0 0.8rem; display: flex; align-items: center; gap: 0.75rem; }
+        .section-divider::before, .section-divider::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.15); }
+        .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+        .btn-submit { width: 100%; padding: 0.85rem; background: #16a34a; color: #fff; border: none; border-radius: 10px; font-size: 1rem; font-weight: 600; cursor: pointer; margin-top: 0.75rem; transition: background 0.2s; font-family: inherit; }
+        .btn-submit:hover { background: #15803d; }
+        .btn-submit:disabled { background: #6b7280; cursor: not-allowed; }
+        .remember-row { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.2rem; font-size: 0.875rem; }
+        .remember-row label { display: flex; align-items: center; gap: 0.5rem; color: rgba(255,255,255,0.6); font-weight: 400; cursor: pointer; }
+        .remember-row a, .auth-footer a { color: #4ade80; text-decoration: none; font-weight: 600; }
+        .auth-footer { text-align: center; margin-top: 1.2rem; color: rgba(255,255,255,0.5); font-size: 0.9rem; }
+        .error-banner { display: none; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.5); border-radius: 10px; padding: 0.75rem 1rem; margin-bottom: 1rem; color: #fca5a5; font-size: 0.875rem; font-weight: 500; display: flex; align-items: center; gap: 0.5rem; }
+        .error-banner.hidden { display: none !important; }
+        .success-banner { display: none; background: rgba(22,163,74,0.15); border: 1px solid rgba(22,163,74,0.5); border-radius: 10px; padding: 0.75rem 1rem; margin-bottom: 1rem; color: #86efac; font-size: 0.875rem; font-weight: 500; align-items: center; gap: 0.5rem; }
+        .success-banner.visible { display: flex; }
+        .google-btn { width: 100%; padding: 0.75rem; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.25); border-radius: 10px; color: #fff; font-size: 0.95rem; font-weight: 600; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.6rem; transition: all 0.2s; font-family: inherit; }
+        .google-btn:hover { background: rgba(255,255,255,0.18); }
+        .google-btn img { width: 20px; height: 20px; }
+        .or-divider { color: rgba(255,255,255,0.35); font-size: 0.78rem; font-weight: 500; text-transform: uppercase; letter-spacing: 0.08em; margin: 1rem 0; display: flex; align-items: center; gap: 0.75rem; }
+        .or-divider::before, .or-divider::after { content: ''; flex: 1; height: 1px; background: rgba(255,255,255,0.12); }
+        .back-link { color: rgba(255,255,255,0.5); font-size: 0.85rem; cursor: pointer; display: inline-flex; align-items: center; gap: 0.4rem; margin-bottom: 1.5rem; transition: color 0.2s; background: none; border: none; font-family: inherit; }
+        .back-link:hover { color: #4ade80; }
+
+        /* Photo upload */
+        .photo-upload-area {
+            border: 2px dashed rgba(255,255,255,0.25);
+            border-radius: 12px;
+            padding: 1.5rem;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color 0.2s, background 0.2s;
+            color: rgba(255,255,255,0.5);
+            font-size: 0.875rem;
+            position: relative;
+        }
+        .photo-upload-area:hover { border-color: #16a34a; background: rgba(22,163,74,0.05); }
+        .photo-upload-area.has-file { border-color: #16a34a; background: rgba(22,163,74,0.08); color: #4ade80; }
+        .photo-upload-area i { font-size: 1.8rem; display: block; margin-bottom: 0.5rem; }
+        .photo-upload-area input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%; }
+        .photo-preview-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; margin-top: 0.75rem; }
+        .photo-preview-item { position: relative; border-radius: 8px; overflow: hidden; aspect-ratio: 1; }
+        .photo-preview-item img { width: 100%; height: 100%; object-fit: cover; }
+        .photo-preview-item .remove-photo { position: absolute; top: 3px; right: 3px; background: rgba(239,68,68,0.85); border: none; border-radius: 50%; width: 20px; height: 20px; color: white; font-size: 0.65rem; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    </style>
+</head>
+<body>
+    <div class="bg-image"></div>
+    <nav class="navbar">
+        <a href="index.html" class="logo"><i class="fa-solid fa-leaf"></i> FoodLink</a>
+    </nav>
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="tab-row" id="tabRow">
+                <button class="tab-btn active" id="loginTab" onclick="showTab('login')">Sign In</button>
+                <button class="tab-btn" id="registerTab" onclick="showTab('register')">Create Account</button>
+            </div>
+
+            <!-- ═══ LOGIN ═══ -->
+            <div id="loginSection">
+                <h2>Welcome Back</h2>
+                <p class="subtitle">Sign in to continue your impact</p>
+                <div class="error-banner hidden" id="loginError">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <span id="loginErrorMsg">Invalid credentials.</span>
+                </div>
+                <button type="button" class="google-btn" id="googleSignInBtn" onclick="handleGoogleSignIn()">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+                    Continue with Google
+                </button>
+                <div class="or-divider">or sign in with email</div>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" id="email" class="form-control" placeholder="name@example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Password</label>
+                        <div class="password-wrapper">
+                            <input type="password" id="password" class="form-control" placeholder="••••••••" required>
+                            <button type="button" class="toggle-pw" onclick="togglePw('password',this)"><i class="fa-solid fa-eye"></i></button>
+                        </div>
+                    </div>
+                    <div class="remember-row">
+                        <label><input type="checkbox"> Remember me</label>
+                        <a href="#" onclick="showTab('forgot'); return false;">Forgot Password?</a>
+                    </div>
+                    <button type="submit" class="btn-submit">Sign In &nbsp;<i class="fa-solid fa-arrow-right"></i></button>
+                </form>
+                <div class="auth-footer">
+                    <p>Don't have an account? <a href="#" onclick="showTab('register')">Create Account</a></p>
+                </div>
+            </div>
+
+            <!-- ═══ FORGOT PASSWORD ═══ -->
+            <div id="forgotSection" style="display:none;">
+                <button type="button" class="back-link" onclick="showTab('login')">
+                    <i class="fa-solid fa-arrow-left"></i> Back to Sign In
+                </button>
+                <h2>Forgot Password?</h2>
+                <p class="subtitle">Enter your email and we'll send you a reset link.</p>
+                <div class="error-banner hidden" id="forgotError"><i class="fa-solid fa-circle-exclamation"></i><span id="forgotErrorMsg">Something went wrong.</span></div>
+                <div class="success-banner" id="forgotSuccess"><i class="fa-solid fa-circle-check"></i><span id="forgotSuccessMsg">Reset link sent!</span></div>
+                <form id="forgotForm">
+                    <div class="form-group">
+                        <label>Email Address</label>
+                        <input type="email" id="forgotEmail" class="form-control" placeholder="name@example.com" required>
+                    </div>
+                    <button type="submit" class="btn-submit" id="forgotBtn"><i class="fa-solid fa-paper-plane"></i> &nbsp;Send Reset Link</button>
+                </form>
+                <div class="auth-footer"><p>Remembered it? <a href="#" onclick="showTab('login')">Sign In</a></p></div>
+            </div>
+
+            <!-- ═══ REGISTER ═══ -->
+            <div id="registerSection" style="display:none;">
+                <h2>Create Account</h2>
+                <p class="subtitle">Choose your account type to get started</p>
+                <div class="role-selector">
+                    <div class="role-card selected" id="roleDonor" onclick="selectRole('donor')">
+                        <i class="fa-solid fa-hand-holding-heart"></i>
+                        <span>Food Donor</span>
+                    </div>
+                    <div class="role-card" id="roleNgo" onclick="selectRole('ngo')">
+                        <i class="fa-solid fa-building-ngo"></i>
+                        <span>NGO / Org</span>
+                    </div>
+                </div>
+
+                <div id="googleSignUpSection">
+                    <button type="button" class="google-btn" onclick="handleGoogleSignIn()">
+                        <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+                        Sign up with Google
+                    </button>
+                    <div class="or-divider">or register with email</div>
+                </div>
+
+                <form id="registerForm" novalidate>
+                    <div class="error-banner hidden" id="registerError"><i class="fa-solid fa-circle-exclamation"></i><span id="registerErrorMsg">Please check your details.</span></div>
+                    <div class="success-banner" id="registerSuccess"><i class="fa-solid fa-circle-check"></i><span>Account created! Redirecting to sign in...</span></div>
+                    <input type="hidden" id="regRole" value="donor">
+
+                    <!-- ── DONOR FIELDS ── -->
+                    <div id="donorFields">
+                        <div class="form-group">
+                            <label>Full Name</label>
+                            <input type="text" id="regName" class="form-control" placeholder="Your full name">
+                        </div>
+                        <div class="form-group">
+                            <label>Email Address</label>
+                            <input type="email" id="regEmail" class="form-control" placeholder="name@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label>Password</label>
+                            <div class="password-wrapper">
+                                <input type="password" id="regPassword" class="form-control" placeholder="Min 8 chars, A-Z, 0-9, @#$" oninput="updateStrengthMeter(this,'donorStrength')">
+                                <button type="button" class="toggle-pw" onclick="togglePw('regPassword',this)"><i class="fa-solid fa-eye"></i></button>
+                            </div>
+                            <!-- Strength meter -->
+                            <div class="pw-strength" id="donorStrength">
+                                <div class="pw-strength-bar"><div class="pw-strength-fill" id="donorStrengthFill"></div></div>
+                                <div class="pw-rules">
+                                    <div class="pw-rule" id="d-len"><i class="fa-solid fa-circle-xmark"></i> At least 8 characters</div>
+                                    <div class="pw-rule" id="d-upper"><i class="fa-solid fa-circle-xmark"></i> One uppercase letter (A–Z)</div>
+                                    <div class="pw-rule" id="d-num"><i class="fa-solid fa-circle-xmark"></i> One number (0–9)</div>
+                                    <div class="pw-rule" id="d-special"><i class="fa-solid fa-circle-xmark"></i> One special character (@, #, $, ! …)</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Confirm Password</label>
+                            <div class="password-wrapper">
+                                <input type="password" id="regConfirm" class="form-control" placeholder="••••••••">
+                                <button type="button" class="toggle-pw" onclick="togglePw('regConfirm',this)"><i class="fa-solid fa-eye"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- ── NGO FIELDS ── -->
+                    <div id="ngoFields" style="display:none;">
+                        <div class="section-divider">Organization Info</div>
+                        <div class="form-group">
+                            <label>Organization Name <span style="color:#f87171">*</span></label>
+                            <input type="text" id="ngoName" class="form-control" placeholder="e.g. Hope Foundation">
+                        </div>
+                        <div class="two-col">
+                            <div class="form-group">
+                                <label>City <span style="color:#f87171">*</span></label>
+                                <input type="text" id="ngoCity" class="form-control" placeholder="City">
+                            </div>
+                            <div class="form-group">
+                                <label>Member Count <span style="color:#f87171">*</span></label>
+                                <input type="number" id="ngoMembers" class="form-control" placeholder="e.g. 25" min="1">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Full Address <span style="color:#f87171">*</span></label>
+                            <input type="text" id="ngoAddress" class="form-control" placeholder="Street, Area, City, PIN">
+                        </div>
+                        <div class="form-group">
+                            <label>Organization Type</label>
+                            <select id="ngoType" class="form-control">
+                                <option value="food_bank">Food Bank</option>
+                                <option value="shelter">Shelter / Relief Center</option>
+                                <option value="orphanage">Orphanage</option>
+                                <option value="old_age_home">Old Age Home</option>
+                                <option value="community_kitchen">Community Kitchen</option>
+                                <option value="rural_development">Rural Development</option>
+                                <option value="other">Other</option>
+                            </select>
+                        </div>
+
+                        <!-- ── PHOTO UPLOAD ── -->
+                        <div class="form-group">
+                            <label>Organization Photos <span style="font-size:0.78rem;color:rgba(255,255,255,0.4);">(up to 3, optional)</span></label>
+                            <div class="photo-upload-area" id="photoUploadArea">
+                                <input type="file" id="ngoPhotos" accept="image/*" multiple onchange="handlePhotoUpload(this)">
+                                <i class="fa-solid fa-camera"></i>
+                                <div id="photoUploadLabel">Click to upload photos of your organization</div>
+                                <div style="font-size:0.75rem;margin-top:0.3rem;opacity:0.6;">JPG, PNG — max 3 photos</div>
+                            </div>
+                            <div class="photo-preview-grid" id="photoPreviewGrid"></div>
+                        </div>
+
+                        <div class="section-divider">Login Credentials</div>
+                        <div class="form-group">
+                            <label>Email Address <span style="color:#f87171">*</span></label>
+                            <input type="email" id="ngoEmail" class="form-control" placeholder="org@example.com">
+                        </div>
+                        <div class="form-group">
+                            <label>Password <span style="color:#f87171">*</span></label>
+                            <div class="password-wrapper">
+                                <input type="password" id="ngoPassword" class="form-control" placeholder="Min 8 chars, A-Z, 0-9, @#$" oninput="updateStrengthMeter(this,'ngoStrength')">
+                                <button type="button" class="toggle-pw" onclick="togglePw('ngoPassword',this)"><i class="fa-solid fa-eye"></i></button>
+                            </div>
+                            <div class="pw-strength" id="ngoStrength">
+                                <div class="pw-strength-bar"><div class="pw-strength-fill" id="ngoStrengthFill"></div></div>
+                                <div class="pw-rules">
+                                    <div class="pw-rule" id="n-len"><i class="fa-solid fa-circle-xmark"></i> At least 8 characters</div>
+                                    <div class="pw-rule" id="n-upper"><i class="fa-solid fa-circle-xmark"></i> One uppercase letter (A–Z)</div>
+                                    <div class="pw-rule" id="n-num"><i class="fa-solid fa-circle-xmark"></i> One number (0–9)</div>
+                                    <div class="pw-rule" id="n-special"><i class="fa-solid fa-circle-xmark"></i> One special character (@, #, $, ! …)</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Confirm Password <span style="color:#f87171">*</span></label>
+                            <div class="password-wrapper">
+                                <input type="password" id="ngoConfirm" class="form-control" placeholder="••••••••">
+                                <button type="button" class="toggle-pw" onclick="togglePw('ngoConfirm',this)"><i class="fa-solid fa-eye"></i></button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-submit" id="registerBtn">
+                        Create Account &nbsp;<i class="fa-solid fa-arrow-right"></i>
+                    </button>
+                </form>
+                <div class="auth-footer">
+                    <p>Already have an account? <a href="#" onclick="showTab('login')">Sign In</a></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        const AUTH_API = 'http://localhost:5000/api/auth';
+
+        // ── Photos state ──
+        let selectedPhotos = [];
+
+        // ── Error / success helpers ──
+        function showLoginError(msg)    { document.getElementById('loginErrorMsg').textContent = msg;    document.getElementById('loginError').classList.remove('hidden'); }
+        function hideLoginError()       { document.getElementById('loginError').classList.add('hidden'); }
+        function showRegisterError(msg) { document.getElementById('registerErrorMsg').textContent = msg; document.getElementById('registerError').classList.remove('hidden'); document.getElementById('registerSuccess').classList.remove('visible'); }
+        function hideRegisterError()    { document.getElementById('registerError').classList.add('hidden'); }
+        function showForgotError(msg)   { document.getElementById('forgotErrorMsg').textContent = msg;   document.getElementById('forgotError').classList.remove('hidden'); document.getElementById('forgotSuccess').classList.remove('visible'); }
+        function hideForgotError()      { document.getElementById('forgotError').classList.add('hidden'); }
+
+        function showTab(tab) {
+            document.getElementById('loginSection').style.display    = tab === 'login'    ? 'block' : 'none';
+            document.getElementById('registerSection').style.display = tab === 'register' ? 'block' : 'none';
+            document.getElementById('forgotSection').style.display   = tab === 'forgot'   ? 'block' : 'none';
+            document.getElementById('tabRow').style.display = tab === 'forgot' ? 'none' : 'flex';
+            document.getElementById('loginTab').className    = 'tab-btn' + (tab === 'login'    ? ' active' : '');
+            document.getElementById('registerTab').className = 'tab-btn' + (tab === 'register' ? ' active' : '');
+            hideLoginError(); hideRegisterError(); hideForgotError();
+        }
+
+        function selectRole(role) {
+            document.getElementById('regRole').value = role;
+            document.getElementById('roleDonor').className = 'role-card' + (role === 'donor' ? ' selected' : '');
+            document.getElementById('roleNgo').className   = 'role-card' + (role === 'ngo'   ? ' selected' : '');
+            document.getElementById('donorFields').style.display = role === 'donor' ? 'block' : 'none';
+            document.getElementById('ngoFields').style.display   = role === 'ngo'   ? 'block' : 'none';
+            document.getElementById('googleSignUpSection').style.display = role === 'donor' ? 'block' : 'none';
+            hideRegisterError();
+        }
+
+        function togglePw(id, btn) {
+            const input = document.getElementById(id);
+            const isText = input.type === 'text';
+            input.type = isText ? 'password' : 'text';
+            btn.innerHTML = isText ? '<i class="fa-solid fa-eye"></i>' : '<i class="fa-solid fa-eye-slash"></i>';
+        }
+
+        // ── Password strength meter ──
+        function updateStrengthMeter(input, meterId) {
+            const val = input.value;
+            const prefix = meterId === 'donorStrength' ? 'd' : 'n';
+
+            const rules = {
+                len:     val.length >= 8,
+                upper:   /[A-Z]/.test(val),
+                num:     /[0-9]/.test(val),
+                special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(val),
+            };
+
+            ['len','upper','num','special'].forEach(r => {
+                const el = document.getElementById(`${prefix}-${r}`);
+                if (!el) return;
+                if (rules[r]) {
+                    el.classList.add('met');
+                    el.querySelector('i').className = 'fa-solid fa-circle-check';
+                } else {
+                    el.classList.remove('met');
+                    el.querySelector('i').className = 'fa-solid fa-circle-xmark';
+                }
+            });
+
+            const score  = Object.values(rules).filter(Boolean).length;
+            const fill   = document.getElementById(`${prefix === 'd' ? 'donor' : 'ngo'}StrengthFill`);
+            const colors = ['#ef4444','#f97316','#eab308','#16a34a'];
+            if (fill) {
+                fill.style.width      = `${score * 25}%`;
+                fill.style.background = colors[score - 1] || 'transparent';
+            }
+        }
+
+        // ── Photo upload handling ──
+        function handlePhotoUpload(input) {
+            const files = Array.from(input.files).slice(0, 3);
+            selectedPhotos = files;
+
+            const grid  = document.getElementById('photoPreviewGrid');
+            const label = document.getElementById('photoUploadLabel');
+            const area  = document.getElementById('photoUploadArea');
+
+            grid.innerHTML = '';
+
+            if (files.length === 0) {
+                label.textContent = 'Click to upload photos of your organization';
+                area.classList.remove('has-file');
+                return;
+            }
+
+            area.classList.add('has-file');
+            label.textContent = `${files.length} photo${files.length > 1 ? 's' : ''} selected`;
+
+            files.forEach((file, idx) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const item = document.createElement('div');
+                    item.className = 'photo-preview-item';
+                    item.innerHTML = `
+                        <img src="${e.target.result}" alt="Preview ${idx+1}">
+                        <button type="button" class="remove-photo" onclick="removePhoto(${idx})">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>`;
+                    grid.appendChild(item);
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function removePhoto(idx) {
+            selectedPhotos.splice(idx, 1);
+            // Rebuild the file input
+            const dt = new DataTransfer();
+            selectedPhotos.forEach(f => dt.items.add(f));
+            document.getElementById('ngoPhotos').files = dt.files;
+            handlePhotoUpload(document.getElementById('ngoPhotos'));
+        }
+
+        // ── Password validator (mirrors backend rules) ──
+        function validatePassword(pw) {
+            if (!pw || pw.length < 8)           return 'Password must be at least 8 characters.';
+            if (!/[A-Z]/.test(pw))              return 'Password must contain at least one capital letter (A–Z).';
+            if (!/[0-9]/.test(pw))              return 'Password must contain at least one number (0–9).';
+            if (!/[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(pw))
+                                                return 'Password must contain at least one special character (@, #, $, ! …).';
+            return null;
+        }
+
+        // ── Google Sign-In ──
+        function handleGoogleSignIn() {
+            const clientId = 'YOUR_GOOGLE_CLIENT_ID_HERE';
+            if (clientId === 'YOUR_GOOGLE_CLIENT_ID_HERE') {
+                showLoginError('Google Sign-In not configured. Please set your Google Client ID.');
+                return;
+            }
+            google.accounts.id.initialize({ client_id: clientId, callback: handleGoogleCredentialResponse });
+            google.accounts.id.prompt();
+        }
+
+        async function handleGoogleCredentialResponse(response) {
+            const btn = document.getElementById('googleSignInBtn');
+            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Signing in...'; }
+            try {
+                const res  = await fetch(`${AUTH_API}/google`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ credential: response.credential }) });
+                const data = await res.json();
+                if (data.token) {
+                    localStorage.setItem('foodlink_token', data.token);
+                    localStorage.setItem('foodlink_user', JSON.stringify(data.user));
+                    if (data.user.role === 'ngo') window.location.href = 'ngo-dashboard.html';
+                    else if (data.user.role === 'admin') window.location.href = 'admin.html';
+                    else window.location.href = 'dashboard.html';
+                } else { showLoginError(data.message || 'Google sign-in failed.'); }
+            } catch { showLoginError('Cannot connect to server.'); }
+            finally { if (btn) { btn.disabled = false; btn.innerHTML = '<img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google"> Continue with Google'; } }
+        }
+
+        // ── Login form ──
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideLoginError();
+            const btn  = e.submitter;
+            const email    = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Signing in...';
+            try {
+                const res  = await fetch(`${AUTH_API}/login`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, password }) });
+                const data = await res.json();
+                if (data.token) {
+                    localStorage.setItem('foodlink_token', data.token);
+                    localStorage.setItem('foodlink_user', JSON.stringify(data.user));
+                    if (data.user.role === 'ngo') window.location.href = 'ngo-dashboard.html';
+                    else if (data.user.role === 'admin') window.location.href = 'admin.html';
+                    else window.location.href = 'dashboard.html';
+                } else { showLoginError(data.message || 'Invalid email or password.'); }
+            } catch { showLoginError('Cannot connect to server.'); }
+            finally { btn.disabled = false; btn.innerHTML = 'Sign In &nbsp;<i class="fa-solid fa-arrow-right"></i>'; }
+        });
+
+        // ── Register form ──
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideRegisterError();
+            const role = document.getElementById('regRole').value;
+            const btn  = document.getElementById('registerBtn');
+
+            let name, email, password, confirm, extraData = {};
+
+            if (role === 'donor') {
+                name     = document.getElementById('regName').value.trim();
+                email    = document.getElementById('regEmail').value.trim();
+                password = document.getElementById('regPassword').value;
+                confirm  = document.getElementById('regConfirm').value;
+            } else {
+                name     = document.getElementById('ngoName').value.trim();
+                email    = document.getElementById('ngoEmail').value.trim();
+                password = document.getElementById('ngoPassword').value;
+                confirm  = document.getElementById('ngoConfirm').value;
+                extraData = {
+                    address:  document.getElementById('ngoAddress').value.trim(),
+                    city:     document.getElementById('ngoCity').value.trim(),
+                    members:  parseInt(document.getElementById('ngoMembers').value) || 1,
+                    org_type: document.getElementById('ngoType').value,
+                };
+            }
+
+            // ── Validation ──
+            if (!name)    return showRegisterError('Please enter your name or organisation name.');
+            if (!email)   return showRegisterError('Please enter your email address.');
+            if (role === 'ngo' && !extraData.address)  return showRegisterError('Please enter your organisation address.');
+            if (role === 'ngo' && !extraData.city)     return showRegisterError('Please enter your city.');
+            if (role === 'ngo' && !(extraData.members >= 1)) return showRegisterError('Please enter the member count.');
+
+            const pwError = validatePassword(password);
+            if (pwError) return showRegisterError(pwError);
+            if (password !== confirm) return showRegisterError('Passwords do not match. Please re-enter.');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating...';
+
+            try {
+                // Note: photos are currently stored locally as previews.
+                // To upload to a server, use FormData + a file-upload endpoint.
+                const res  = await fetch(`${AUTH_API}/register`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, password, role, ...extraData })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    document.getElementById('registerSuccess').classList.add('visible');
+                    hideRegisterError();
+                    setTimeout(() => showTab('login'), 1800);
+                } else {
+                    showRegisterError(data.message || 'Registration failed. Please try again.');
+                }
+            } catch { showRegisterError('Cannot connect to server. Please try again.'); }
+            finally { btn.disabled = false; btn.innerHTML = 'Create Account &nbsp;<i class="fa-solid fa-arrow-right"></i>'; }
+        });
+
+        // ── Forgot password form ──
+        document.getElementById('forgotForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideForgotError();
+            const btn   = document.getElementById('forgotBtn');
+            const email = document.getElementById('forgotEmail').value.trim();
+            if (!email) return showForgotError('Please enter your email address.');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending...';
+            try {
+                const res  = await fetch(`${AUTH_API}/forgot-password`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email }) });
+                const data = await res.json();
+                if (res.ok) {
+                    document.getElementById('forgotSuccess').classList.add('visible');
+                    document.getElementById('forgotSuccessMsg').textContent = data.message || 'Reset link sent!';
+                    hideForgotError();
+                    if (data.devLink) {
+                        document.getElementById('forgotSuccessMsg').innerHTML = data.message + '<br><a href="' + data.devLink + '" style="color:#4ade80;font-size:0.8rem;" target="_blank">Dev: Open reset link</a>';
+                    }
+                } else { showForgotError(data.message || 'Failed to send reset link.'); }
+            } catch { showForgotError('Cannot connect to server.'); }
+            finally { btn.disabled = false; btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> &nbsp;Send Reset Link'; }
+        });
+    </script>
+</body>
+</html>

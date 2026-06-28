@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Panel | FoodLink AI</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        // ── ADMIN GUARD ── Redirect non-admins away before page renders
+        (function () {
+            const token = localStorage.getItem('foodlink_token');
+            const user = JSON.parse(localStorage.getItem('foodlink_user') || '{}');
+            if (!token || user.role !== 'admin') {
+                localStorage.removeItem('foodlink_token');
+                localStorage.removeItem('foodlink_user');
+                window.location.href = 'auth.html';
+            }
+        })();
+    </script>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="navbar glass" style="padding: 0.8rem 5%;">
+        <a href="index.html" class="logo">
+            <i class="fa-solid fa-shield-halved"></i> FoodLink Admin
+        </a>
+        <div class="nav-links">
+            <a href="#" id="adminLogoutBtn" class="btn btn-outline" style="padding: 0.5rem 1rem; margin-left: 1rem;">System Logout</a>
+        </div>
+    </nav>
+
+    <!-- Sidebar Layout -->
+    <div class="dashboard-layout">
+        <aside class="sidebar">
+            <ul class="sidebar-menu">
+                <li><a href="#" class="active"><i class="fa-solid fa-globe"></i> Global Overview</a></li>
+                <li><a href="#"><i class="fa-solid fa-users"></i> User Management</a></li>
+                <li><a href="#"><i class="fa-solid fa-building-ngo"></i> NGO Approvals</a></li>
+                <li><a href="#"><i class="fa-solid fa-triangle-exclamation"></i> Reported Issues</a></li>
+            </ul>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div class="dashboard-header">
+                <div>
+                    <h2 style="font-family:'Outfit';">System Status Overview</h2>
+                    <p style="color: var(--text-muted); font-size: 0.95rem;" id="adminSubtitle">Loading system status...</p>
+                </div>
+            </div>
+
+            <!-- Metrics Grid -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-icon" style="color: #10b981; background: rgba(16, 185, 129, 0.08);"><i class="fa-solid fa-utensils"></i></div>
+                    <div class="metric-info">
+                        <h4>Total Meals Rescued</h4>
+                        <p id="statMeals">—</p>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon" style="color: #3b82f6; background: rgba(59, 130, 246, 0.08);"><i class="fa-solid fa-arrows-down-to-people"></i></div>
+                    <div class="metric-info">
+                        <h4>Registered Users</h4>
+                        <p id="statUsers">—</p>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon" style="color: #10b981; background: rgba(16, 185, 129, 0.08);"><i class="fa-solid fa-building-ngo"></i></div>
+                    <div class="metric-info">
+                        <h4>Approved NGOs</h4>
+                        <p id="statNgos">—</p>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.08);"><i class="fa-solid fa-clock"></i></div>
+                    <div class="metric-info">
+                        <h4>Pending Approvals</h4>
+                        <p id="statPendingNgos">—</p>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon" style="color: #f43f5e; background: rgba(244, 63, 94, 0.08);"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                    <div class="metric-info">
+                        <h4>Unmatched Requests</h4>
+                        <p id="statFailed">—</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pending Approvals -->
+            <h3 style="margin-bottom: 1rem; font-family:'Outfit';">Pending NGO Certifications</h3>
+            <div class="table-container" style="margin-bottom: 2.2rem;">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>NGO Name</th>
+                            <th>Registered Email</th>
+                            <th>Capacity</th>
+                            <th>Accepted Categories</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="pendingNgosBody">
+                        <tr><td colspan="5" style="text-align:center;color:var(--text-muted);">Loading pending approvals...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Recent System Logs -->
+            <h3 style="margin-bottom: 1rem; font-family:'Outfit';">Recent Platform Events</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Timestamp</th>
+                            <th>Event Type</th>
+                            <th>Transaction Details</th>
+                            <th>Logistics State</th>
+                        </tr>
+                    </thead>
+                    <tbody id="systemLogsBody">
+                        <tr><td colspan="4" style="text-align:center;color:var(--text-muted);">Loading system logs...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <!-- Script references -->
+    <script src="script.js"></script>
+    <script src="admin-frontend.js"></script>
+</body>
+</html>

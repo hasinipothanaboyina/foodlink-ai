@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NGO Partners | FoodLink AI</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Search bar */
+        .ngo-search-wrap {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+        .ngo-search-wrap i.search-icon {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            pointer-events: none;
+        }
+        #ngoSearchInput {
+            width: 100%;
+            padding: 0.75rem 1rem 0.75rem 2.6rem;
+            font-size: 0.95rem;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-lg);
+            background: var(--surface);
+            color: var(--text-primary);
+            font-family: inherit;
+            box-sizing: border-box;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        #ngoSearchInput:focus {
+            outline: none;
+            border-color: var(--brand-green);
+            box-shadow: 0 0 0 3px rgba(16,185,129,0.12);
+        }
+        #ngoSearchInput::placeholder { color: var(--text-muted); }
+        #clearSearchBtn {
+            position: absolute;
+            right: 0.85rem;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: none;
+            padding: 0.2rem;
+        }
+        #clearSearchBtn:hover { color: var(--text-primary); }
+
+        /* Filter row */
+        .filter-row {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 1.75rem;
+            padding: 1rem 1.25rem;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+        }
+        .filter-row label {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+        .filter-row select {
+            padding: 0.5rem 0.8rem;
+            font-size: 0.875rem;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-md);
+            background: var(--surface);
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: border-color 0.2s;
+            font-family: inherit;
+        }
+        .filter-row select:focus { outline: none; border-color: var(--brand-green); }
+        .filter-divider { width: 1px; height: 20px; background: var(--border); }
+        .result-count { margin-left: auto; font-size: 0.8rem; color: var(--text-muted); white-space: nowrap; }
+
+        /* NGO Card */
+        .ngo-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            display: flex;
+            flex-direction: column;
+            transition: box-shadow 0.2s, border-color 0.2s, transform 0.2s;
+            overflow: hidden;
+        }
+        .ngo-card:hover {
+            box-shadow: 0 8px 24px rgba(15,23,42,.1);
+            border-color: #c7d2db;
+            transform: translateY(-2px);
+        }
+        .ngo-card-top {
+            padding: 1.25rem 1.5rem 1rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: flex-start;
+            gap: 1rem;
+        }
+        .ngo-avatar {
+            width: 46px;
+            height: 46px;
+            border-radius: var(--radius-md);
+            background: var(--brand-green-l);
+            color: var(--brand-green);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            flex-shrink: 0;
+        }
+        .ngo-avatar.food_bank     { background: #dbeafe; color: #1d4ed8; }
+        .ngo-avatar.orphanage     { background: #fef3c7; color: #b45309; }
+        .ngo-avatar.old_age_home  { background: #ede9fe; color: #6d28d9; }
+        .ngo-avatar.shelter       { background: #fee2e2; color: #b91c1c; }
+        .ngo-avatar.community_kitchen { background: #dcfce7; color: #15803d; }
+        .ngo-avatar.rural_development { background: #f0fdf4; color: #166534; }
+
+        .ngo-name { font-size: 0.95rem; font-weight: 700; color: var(--text-primary); line-height: 1.35; margin-bottom: 0.25rem; }
+        .ngo-org-type {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.72rem;
+            font-weight: 600;
+            padding: 0.2rem 0.6rem;
+            border-radius: var(--radius-full);
+            background: var(--surface-2);
+            color: var(--text-muted);
+            border: 1px solid var(--border);
+            margin-top: 0.2rem;
+        }
+
+        .ngo-card-body { padding: 1rem 1.5rem; flex: 1; }
+        .ngo-meta-row {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.6rem;
+            font-size: 0.82rem;
+            color: var(--text-secondary);
+            margin-bottom: 0.6rem;
+            line-height: 1.5;
+        }
+        .ngo-meta-row:last-child { margin-bottom: 0; }
+        .ngo-meta-icon { width: 14px; text-align: center; color: var(--text-muted); flex-shrink: 0; margin-top: 2px; font-size: 0.78rem; }
+        .ngo-meta-row a { color: var(--brand-green); font-weight: 500; }
+        .ngo-meta-row a:hover { text-decoration: underline; }
+
+        .ngo-card-footer {
+            padding: 0.85rem 1.5rem;
+            border-top: 1px solid var(--border);
+            background: var(--surface-2);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+            flex-wrap: wrap;
+        }
+        .ngo-types {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.35rem;
+        }
+        .type-chip {
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 0.2rem 0.55rem;
+            border-radius: var(--radius-full);
+            background: var(--brand-green-l);
+            color: var(--brand-green-d);
+            white-space: nowrap;
+        }
+        .ngo-capacity {
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            white-space: nowrap;
+        }
+        .ngo-capacity span { color: var(--text-muted); font-weight: 400; }
+
+        .distance-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.78rem;
+            font-weight: 700;
+            color: var(--brand-green-d);
+            background: var(--brand-green-l);
+            border-radius: var(--radius-full);
+            padding: 0.25rem 0.65rem;
+        }
+
+        .darpan-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-full);
+            padding: 0.2rem 0.6rem;
+            font-family: monospace;
+        }
+        .darpan-badge i { color: var(--brand-green); }
+
+        /* Cards grid */
+        .ngo-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.25rem;
+        }
+
+        /* Empty / loading states */
+        .state-box {
+            grid-column: 1 / -1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 2rem;
+            text-align: center;
+            color: var(--text-muted);
+            gap: 0.75rem;
+        }
+        .state-box i { font-size: 2.5rem; color: var(--border-strong); }
+        .state-box p { font-size: 0.875rem; max-width: 300px; }
+
+        /* Skeleton loader */
+        .skeleton-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 1.25rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .skel {
+            background: linear-gradient(90deg, var(--border) 25%, var(--surface-2) 50%, var(--border) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.4s infinite;
+            border-radius: var(--radius-sm);
+        }
+        @keyframes shimmer { to { background-position: -200% 0; } }
+        .skel-title  { height: 16px; width: 70%; }
+        .skel-sub    { height: 12px; width: 45%; }
+        .skel-line   { height: 11px; width: 90%; }
+        .skel-line-s { height: 11px; width: 65%; }
+
+        /* Page header tweaks */
+        .page-header-actions { display: flex; gap: 0.75rem; flex-wrap: wrap; }
+
+        @media (max-width: 640px) {
+            .ngo-grid { grid-template-columns: 1fr; }
+            .filter-row { flex-direction: column; align-items: flex-start; }
+            .result-count { margin-left: 0; }
+        }
+    </style>
+    <script>
+        /* ── STRICT ROUTE GUARD ── */
+        (function () {
+            const token = localStorage.getItem('foodlink_token');
+            const user  = JSON.parse(localStorage.getItem('foodlink_user') || '{}');
+            if (!token || !['donor', 'ngo'].includes(user.role)) {
+                localStorage.removeItem('foodlink_token');
+                localStorage.removeItem('foodlink_user');
+                window.location.href = 'auth.html';
+            }
+        })();
+    </script>
+</head>
+<body>
+
+<!-- ═══════════ NAVBAR ═══════════ -->
+<nav class="navbar glass" style="padding: 0.8rem 5%;">
+    <a href="index.html" class="logo">
+        <i class="fa-solid fa-leaf"></i> FoodLink
+    </a>
+    <div class="nav-links">
+        <div class="user-profile" id="userProfileNav" style="display: flex; align-items: center; gap: 0.5rem; font-weight: 500;">
+            <div id="userAvatar" style="width: 35px; height: 35px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 1px solid rgba(0,0,0,0.05);">D</div>
+            <span id="userNameNav">Loading...</span>
+        </div>
+        <a href="#" id="logoutBtn" class="btn btn-outline" style="padding: 0.5rem 1rem; margin-left: 1rem;">Sign Out</a>
+    </div>
+</nav>
+
+<!-- ═══════════ APP SHELL ═══════════ -->
+<div class="dashboard-layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <ul class="sidebar-menu">
+            <li><a href="dashboard.html"><i class="fa-solid fa-chart-line"></i> Analytics Overview</a></li>
+            <li><a href="my-donations.html"><i class="fa-solid fa-box-open"></i> My Donations</a></li>
+            <li><a href="ngo-partners.html" class="active"><i class="fa-solid fa-handshake"></i> NGO Partners</a></li>
+            <li><a href="#" id="notificationsLink"><i class="fa-solid fa-bell"></i> Notifications <span id="notifCountBadge" style="background: var(--primary); color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.7rem; margin-left: auto; display:none;">0</span></a></li>
+            <li style="margin-top: 2rem;"><a href="donate.html" class="btn btn-primary" style="color: white; justify-content: center; width: 100%;"><i class="fa-solid fa-plus"></i> New Donation</a></li>
+        </ul>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+
+        <!-- Page Header -->
+        <div class="page-header">
+            <div>
+                <h2>NGO Partners</h2>
+                <p id="ngoSubtitle">Verified food-relief organisations across Andhra Pradesh.</p>
+            </div>
+            <div class="page-header-actions">
+                <button id="findNearMeBtn" class="btn btn-outline">
+                    <i class="fa-solid fa-location-crosshairs"></i> Sort by Distance
+                </button>
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="ngo-search-wrap">
+            <i class="fa-solid fa-magnifying-glass search-icon"></i>
+            <input
+                type="text"
+                id="ngoSearchInput"
+                placeholder="Search NGO by name…"
+                autocomplete="off"
+            >
+            <button id="clearSearchBtn" title="Clear search">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <!-- Filters -->
+        <div class="filter-row">
+            <!-- District filter -->
+            <label for="districtFilter"><i class="fa-solid fa-map"></i> District</label>
+            <select id="districtFilter">
+                <option value="all">All Districts</option>
+            </select>
+
+            <div class="filter-divider"></div>
+
+            <!-- City filter -->
+            <label for="cityFilter"><i class="fa-solid fa-city"></i> City</label>
+            <select id="cityFilter">
+                <option value="all">All Cities</option>
+            </select>
+
+            <div class="filter-divider"></div>
+
+            <!-- Org type filter -->
+            <label for="typeFilter"><i class="fa-solid fa-tag"></i> Type</label>
+            <select id="typeFilter">
+                <option value="all">All Types</option>
+                <option value="food_bank">Food Bank</option>
+                <option value="orphanage">Orphanage</option>
+                <option value="shelter">Shelter</option>
+                <option value="old_age_home">Old Age Home</option>
+                <option value="community_kitchen">Community Kitchen</option>
+                <option value="rural_development">Rural Development</option>
+            </select>
+
+            <span class="result-count" id="resultCount"></span>
+        </div>
+
+        <!-- NGO Cards Grid -->
+        <div class="ngo-grid" id="ngoCardsGrid">
+            <!-- Skeleton placeholders while loading -->
+            <div class="skeleton-card">
+                <div style="display:flex;gap:.75rem;align-items:center;">
+                    <div class="skel" style="width:46px;height:46px;border-radius:10px;flex-shrink:0;"></div>
+                    <div style="flex:1;display:flex;flex-direction:column;gap:.4rem;">
+                        <div class="skel skel-title"></div>
+                        <div class="skel skel-sub"></div>
+                    </div>
+                </div>
+                <div class="skel skel-line"></div>
+                <div class="skel skel-line-s"></div>
+                <div class="skel skel-line"></div>
+            </div>
+            <div class="skeleton-card">
+                <div style="display:flex;gap:.75rem;align-items:center;">
+                    <div class="skel" style="width:46px;height:46px;border-radius:10px;flex-shrink:0;"></div>
+                    <div style="flex:1;display:flex;flex-direction:column;gap:.4rem;">
+                        <div class="skel skel-title"></div>
+                        <div class="skel skel-sub"></div>
+                    </div>
+                </div>
+                <div class="skel skel-line"></div>
+                <div class="skel skel-line-s"></div>
+                <div class="skel skel-line"></div>
+            </div>
+            <div class="skeleton-card">
+                <div style="display:flex;gap:.75rem;align-items:center;">
+                    <div class="skel" style="width:46px;height:46px;border-radius:10px;flex-shrink:0;"></div>
+                    <div style="flex:1;display:flex;flex-direction:column;gap:.4rem;">
+                        <div class="skel skel-title"></div>
+                        <div class="skel skel-sub"></div>
+                    </div>
+                </div>
+                <div class="skel skel-line"></div>
+                <div class="skel skel-line-s"></div>
+                <div class="skel skel-line"></div>
+            </div>
+        </div>
+
+    </main>
+</div>
+
+<script src="script.js"></script>
+<script src="ngo-partners.js"></script>
+<script>
+    /* ── Bootstrap user UI ── */
+    const _user = JSON.parse(localStorage.getItem('foodlink_user') || '{}');
+    if (_user.name) {
+        const ini = _user.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+        document.getElementById('userAvatar').textContent    = ini;
+        document.getElementById('sidebarAvatar').textContent = ini;
+        document.getElementById('userNameNav').textContent   = _user.name;
+        document.getElementById('sidebarName').textContent   = _user.name;
+    }
+
+    /* ── Logout ── */
+    document.getElementById('logoutBtn').addEventListener('click', e => {
+        e.preventDefault();
+        localStorage.removeItem('foodlink_token');
+        localStorage.removeItem('foodlink_user');
+        window.location.href = 'auth.html';
+    });
+
+    /* ── Notification bell (shared panel toggle) ── */
+    const _bell  = document.getElementById('notifBellBtn');
+    const _panel = document.getElementById('notificationsPanel');
+    const _sidebarNotif = document.getElementById('notificationsLink');
+
+    function toggleNotifPanel(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        _panel.classList.toggle('open');
+    }
+    _bell.addEventListener('click', toggleNotifPanel);
+    if (_sidebarNotif) _sidebarNotif.addEventListener('click', toggleNotifPanel);
+    document.addEventListener('click', e => {
+        if (!_panel.contains(e.target) && e.target !== _bell && !_bell.contains(e.target)) {
+            _panel.classList.remove('open');
+        }
+    });
+</script>
+</body>
+</html>

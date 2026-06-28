@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donate Food | FoodLink AI</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        // ── STRICT ROUTE GUARD ── Redirect unauthenticated users straight to auth.html
+        (function () {
+            const token = localStorage.getItem('foodlink_token');
+            const user = JSON.parse(localStorage.getItem('foodlink_user') || '{}');
+            if (!token || user.role !== 'donor') {
+                localStorage.removeItem('foodlink_token');
+                localStorage.removeItem('foodlink_user');
+                window.location.href = 'auth.html';
+            }
+        })();
+    </script>
+</head>
+<body style="background: var(--background);">
+    <!-- Navbar -->
+    <nav class="navbar glass" style="padding: 0.8rem 5%;">
+        <a href="index.html" class="logo">
+            <i class="fa-solid fa-leaf"></i> FoodLink
+        </a>
+        <div class="nav-links">
+            <a href="dashboard.html">Dashboard</a>
+            <div class="user-profile" id="userProfileNav" style="display: flex; align-items: center; gap: 0.5rem; font-weight: 500;">
+                <div id="userAvatar" style="width: 35px; height: 35px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; border: 1px solid rgba(0,0,0,0.05);">D</div>
+                <span id="userNameNav">Loading...</span>
+            </div>
+            <a href="#" id="logoutBtn" class="btn btn-outline" style="padding: 0.5rem 1rem; margin-left: 1rem;">Sign Out</a>
+        </div>
+    </nav>
+
+    <!-- Form Container -->
+    <div class="form-container">
+        <div class="auth-card wide">
+            <div class="auth-header">
+                <h2>Register a Donation</h2>
+                <p style="color: var(--text-muted);">Fill in the details below. Our AI will automatically match you with the nearest NGO in need.</p>
+            </div>
+            
+            <form id="donationForm">
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem;">
+                    <div class="form-group">
+                        <label for="foodType">Food Category</label>
+                        <select id="foodType" class="form-control" required>
+                            <option value="">Select Category</option>
+                            <option value="cooked">Cooked Meals</option>
+                            <option value="produce">Fresh Produce</option>
+                            <option value="packaged">Packaged Goods</option>
+                            <option value="bakery">Bakery / Bread</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="quantity">Quantity (Approx. Meals)</label>
+                        <input type="number" id="quantity" class="form-control" min="1" placeholder="e.g. 50" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="expiryTime">Must be picked up by</label>
+                        <input type="datetime-local" id="expiryTime" class="form-control" required>
+                    </div>
+                    <!-- ── NGO Preference Selector ── -->
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label for="preferredNgo">
+                            <i class="fa-solid fa-building-ngo" style="color: var(--primary); margin-right: 0.3rem;"></i>
+                            Donate to a Specific NGO
+                            <span style="font-weight: 400; color: var(--text-muted); font-size: 0.85rem;"> — optional</span>
+                        </label>
+                        <div style="position: relative;">
+                            <select id="preferredNgo" class="form-control" style="padding-right: 2.5rem;">
+                                <option value="">🤖 Let AI find the best match for me</option>
+                            </select>
+                        </div>
+                        <!-- Info note shown when an NGO is selected -->
+                        <div id="ngoSelectionNote" style="display:none; margin-top: 0.6rem; padding: 0.65rem 1rem; background: rgba(16,185,129,0.07); border: 1px solid rgba(16,185,129,0.25); border-radius: 10px; font-size: 0.85rem; color: var(--text-muted);">
+                            <i class="fa-solid fa-circle-info" style="color: var(--primary); margin-right: 0.4rem;"></i>
+                            Your donation will go directly to this NGO. If they're at full capacity, our AI will find the next best match automatically.
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label for="description">Additional Details</label>
+                        <textarea id="description" class="form-control" rows="3" placeholder="Dietary info, storage requirements, etc."></textarea>
+                    </div>
+                    <div class="form-group" style="grid-column: 1 / -1;">
+                        <label>Pickup Location</label>
+                        <div style="display: flex; gap: 1rem;">
+                            <input type="text" id="address" class="form-control" placeholder="Detecting your location..." readonly required>
+                            <button type="button" id="getLocationBtn" class="btn btn-outline" style="white-space: nowrap;">
+                                <i class="fa-solid fa-location-crosshairs"></i> Locate Me
+                            </button>
+                        </div>
+                        <div id="mapPlaceholder" class="map-placeholder" style="display: none;">
+                            <i class="fa-solid fa-map-location-dot" style="font-size: 2rem; margin-bottom: 0.5rem; display: block; color: var(--primary);"></i>
+                            Location Acquired (Map Locked)
+                        </div>
+                    </div>
+                </div>
+                <div style="margin-top: 2rem; text-align: right;">
+                    <button type="submit" class="btn btn-primary" id="submitDonationBtn">
+                        <i class="fa-solid fa-paper-plane"></i> Submit Donation
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Loading Overlay for Submit -->
+    <div id="loadingOverlay" style="display: none; position: fixed; inset: 0; background: rgba(255,255,255,0.85); backdrop-filter: blur(5px); z-index: 2000; align-items: center; justify-content: center; flex-direction: column;">
+        <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 3rem; color: var(--primary); margin-bottom: 1rem;"></i>
+        <h3>AI is matching your donation...</h3>
+    </div>
+
+    <script src="script.js"></script>
+    <script>
+        // Load user info from localStorage
+        const user = JSON.parse(localStorage.getItem('foodlink_user') || '{}');
+        if (user.name) {
+            const initials = user.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+            document.getElementById('userAvatar').textContent = initials;
+            document.getElementById('userNameNav').textContent = user.name;
+        }
+
+        // ── Load approved NGOs into the preferred-NGO dropdown ──
+        (async function loadNgoOptions() {
+            const select = document.getElementById('preferredNgo');
+            if (!select) return;
+            try {
+                const res  = await fetch('http://localhost:5000/api/ngos');
+                const data = await res.json();
+                const ngos = data.ngos || [];
+                if (ngos.length === 0) return;
+
+                // Group by city for readability
+                const byCity = {};
+                ngos.forEach(n => {
+                    const city = n.city || 'Other';
+                    if (!byCity[city]) byCity[city] = [];
+                    byCity[city].push(n);
+                });
+
+                Object.keys(byCity).sort().forEach(city => {
+                    const group = document.createElement('optgroup');
+                    group.label = city;
+                    byCity[city].forEach(n => {
+                        const opt = document.createElement('option');
+                        opt.value       = n.id;
+                        opt.textContent = `${n.name}${n.capacity ? '  (cap: ' + n.capacity + ')' : ''}`;
+                        group.appendChild(opt);
+                    });
+                    select.appendChild(group);
+                });
+            } catch (e) {
+                console.warn('Could not load NGOs for selector:', e);
+            }
+        })();
+
+        // Show/hide the info note when an NGO is selected
+        document.getElementById('preferredNgo').addEventListener('change', function () {
+            const note = document.getElementById('ngoSelectionNote');
+            note.style.display = this.value ? 'block' : 'none';
+        });
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', (e) => {
+            e.preventDefault();
+            localStorage.removeItem('foodlink_token');
+            localStorage.removeItem('foodlink_user');
+            window.location.href = 'auth.html';
+        });
+    </script>
+</body>
+</html>

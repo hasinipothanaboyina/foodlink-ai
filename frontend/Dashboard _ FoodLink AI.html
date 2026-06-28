@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<!-- saved from url=(0085)file:///C:/Users/user/.gemini/antigravity/scratch/foodlink-ai/frontend/dashboard.html -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard | FoodLink AI</title>
+    <link rel="stylesheet" href="./Dashboard _ FoodLink AI_files/style.css">
+    <link rel="stylesheet" href="./Dashboard _ FoodLink AI_files/all.min.css">
+</head>
+<body>
+
+    <nav class="navbar glass" style="padding: 0.8rem 5%;">
+        <a href="file:///C:/Users/user/.gemini/antigravity/scratch/foodlink-ai/frontend/index.html" class="logo">
+            <i class="fa-solid fa-leaf"></i> FoodLink
+        </a>
+        <div class="nav-links">
+            <div class="user-profile" style="display: flex; align-items: center; gap: 0.5rem; font-weight: 500;">
+                <div style="width: 35px; height: 35px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center;">JD</div>
+                John's Bakery
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-layout">
+        <aside class="sidebar" id="sidebar">
+            <ul class="sidebar-menu">
+                <li><a href="file:///C:/Users/user/.gemini/antigravity/scratch/foodlink-ai/frontend/dashboard.html#" class="active"><i class="fa-solid fa-chart-line"></i> Analytics</a></li>
+                <li><a href="file:///C:/Users/user/.gemini/antigravity/scratch/foodlink-ai/frontend/dashboard.html#"><i class="fa-solid fa-box-open"></i> My Donations</a></li>
+                <li><a href="file:///C:/Users/user/.gemini/antigravity/scratch/foodlink-ai/frontend/dashboard.html#"><i class="fa-solid fa-handshake"></i> NGO Partners</a></li>
+                <li><a href="file:///C:/Users/user/.gemini/antigravity/scratch/foodlink-ai/frontend/dashboard.html#"><i class="fa-solid fa-bell"></i> Notifications <span style="background: var(--primary); color: white; padding: 2px 6px; border-radius: 10px; font-size: 0.7rem; margin-left: auto;">3</span></a></li>
+                <li style="margin-top: 2rem;"><a href="file:///C:/Users/user/.gemini/antigravity/scratch/foodlink-ai/frontend/donate.html" class="btn btn-primary" style="color: white; justify-content: center;"><i class="fa-solid fa-plus"></i> New Donation</a></li>
+            </ul>
+        </aside>
+
+        <main class="main-content">
+            <div class="dashboard-header">
+                <div>
+                    <h2>Welcome back, John!</h2>
+                    <p style="color: var(--text-muted);">Here's the impact you've made this month.</p>
+                </div>
+            </div>
+
+            <!-- Metrics -->
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-icon"><i class="fa-solid fa-utensils"></i></div>
+                    <div class="metric-info">
+                        <h4>Meals Donated</h4>
+                        <p>1,250</p>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon" style="color: var(--secondary); background: rgba(59, 130, 246, 0.1);"><i class="fa-solid fa-hand-holding-heart"></i></div>
+                    <div class="metric-info">
+                        <h4>NGOs Helped</h4>
+                        <p>12</p>
+                    </div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-icon" style="color: #f59e0b; background: rgba(245, 158, 11, 0.1);"><i class="fa-solid fa-leaf"></i></div>
+                    <div class="metric-info">
+                        <h4>CO2 Saved (kg)</h4>
+                        <p>450</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Active Donations & AI Matching -->
+            <h3 style="margin-bottom: 1rem;">Active Deliveries</h3>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Donation ID</th>
+                            <th>Items</th>
+                            <th>AI Matched NGO</th>
+                            <th>Distance</th>
+                            <th>Status</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="donationsTableBody">
+                        <tr>
+                            <td>#FL-9021</td>
+                            <td>50x Assorted Pastries</td>
+                            <td><strong>Hope Center Shelter</strong></td>
+                            <td>2.4 km</td>
+                            <td><span class="badge badge-pending">Waiting Pickup</span></td>
+                            <td><a href="file:///C:/Users/user/.gemini/antigravity/scratch/foodlink-ai/frontend/dashboard.html#" style="color: var(--primary); font-weight: 500;">View Details</a></td>
+                        </tr>
+                        <tr>
+                            <td>#FL-9020</td>
+                            <td>30kg Fresh Produce</td>
+                            <td><strong>City Food Bank</strong></td>
+                            <td>5.1 km</td>
+                            <td><span class="badge badge-matched">In Transit</span></td>
+                            <td><a href="file:///C:/Users/user/.gemini/antigravity/scratch/foodlink-ai/frontend/dashboard.html#" style="color: var(--primary); font-weight: 500;">Track</a></td>
+                        </tr>
+                        <tr>
+                            <td>#FL-9018</td>
+                            <td>100x Hot Meals</td>
+                            <td><strong>Downtown Mission</strong></td>
+                            <td>1.2 km</td>
+                            <td><span class="badge badge-completed">Completed</span></td>
+                            <td><a href="file:///C:/Users/user/.gemini/antigravity/scratch/foodlink-ai/frontend/dashboard.html#" style="color: var(--text-muted);">Receipt</a></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- Notification Banner -->
+    <div id="notificationBanner" class="notification-banner">
+        <i class="fa-solid fa-circle-check" style="color: var(--primary); font-size: 1.5rem;"></i>
+        <div>
+            <h4 style="margin-bottom: 0.2rem;">Donation Picked Up!</h4>
+            <p style="font-size: 0.9rem; color: var(--text-muted);">Your pastries (FL-9021) are on their way to Hope Center.</p>
+        </div>
+    </div>
+
+    <script src="./Dashboard _ FoodLink AI_files/script.js"></script>
+    <script>
+        // Trigger mock notification for demo
+        setTimeout(() => {
+            document.getElementById('notificationBanner').classList.add('show');
+            setTimeout(() => {
+                document.getElementById('notificationBanner').classList.remove('show');
+            }, 5000);
+        }, 2000);
+    </script>
+
+
+</body></html>

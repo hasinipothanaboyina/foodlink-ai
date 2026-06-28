@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoodLink AI | Eradicating Food Waste</title>
+    <meta name="description" content="AI-powered platform connecting surplus food with NGOs to reduce waste and fight hunger.">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* ── Nav states ── */
+        .nav-logged-in  { display: none; }
+        .nav-logged-out { display: none; }
+
+        /* ── Hero CTA states ── */
+        .hero-logged-in  { display: none; }
+        .hero-logged-out { display: none; }
+    </style>
+</head>
+<body>
+
+<!-- ═══════════ NAVBAR ═══════════ -->
+<nav class="navbar glass">
+    <a href="index.html" class="logo">
+        <i class="fa-solid fa-leaf"></i> FoodLink AI
+    </a>
+
+    <div class="nav-links" id="navLinks">
+        <!-- Always visible -->
+        <a href="index.html">Home</a>
+        <a href="#features">Features</a>
+        
+        <a href="dashboard.html" id="navDashboardLink" style="display:none;">Dashboard</a>
+        <a href="donate.html" id="navDonateLink" class="btn btn-primary" style="display:none;">Donate Food</a>
+        
+        <a href="auth.html" id="navLoginBtn" class="btn btn-outline">
+            <i class="fa-solid fa-right-to-bracket"></i> Sign In / Sign Up
+        </a>
+
+        <!-- ── LOGGED IN: show role-specific links + avatar + logout ── -->
+        <span class="nav-logged-in" id="navLoggedIn" style="display:none; gap:0.75rem; align-items:center;">
+            <!-- User avatar + name -->
+            <div style="display:flex; align-items:center; gap:0.5rem; padding: 0.3rem 0.75rem; background: var(--surface-2, #f8fafc); border: 1px solid var(--border); border-radius: 9999px;">
+                <div id="navAvatar" style="width:26px; height:26px; border-radius:50%; background:var(--primary,#10b981); color:white; display:flex; align-items:center; justify-content:center; font-size:0.7rem; font-weight:800;">?</div>
+                <span id="navUserName" style="font-size:0.875rem; font-weight:600; color:var(--text-main,#0f172a);">User</span>
+            </div>
+
+            <!-- Logout -->
+            <a href="#" id="navLogoutBtn" class="btn btn-outline" style="padding:0.5rem 1rem;">
+                <i class="fa-solid fa-right-from-bracket"></i> Sign Out
+            </a>
+        </span>
+    </div>
+
+    <div class="mobile-menu-toggle" id="mobileMenuBtn">
+        <i class="fa-solid fa-bars"></i>
+    </div>
+</nav>
+
+<!-- ═══════════ HERO ═══════════ -->
+<header class="hero">
+    <div class="hero-content">
+        <div class="hero-tagline">
+            <i class="fa-solid fa-robot"></i> AI-Powered Food Distribution
+        </div>
+        <h1>Share Surplus.<br><span>End Hunger.</span></h1>
+        <p>Join our intelligent network that connects food donors with NGOs in real-time, ensuring perfectly good food reaches those who need it most — not the landfill.</p>
+
+        <!-- ── LOGGED OUT hero buttons ── -->
+        <div class="hero-actions hero-logged-out" id="heroLoggedOut">
+            <a href="auth.html" class="btn btn-primary btn-lg">
+                <i class="fa-solid fa-right-to-bracket"></i> Sign In / Sign Up
+            </a>
+        </div>
+
+        <!-- ── LOGGED IN hero buttons (role-specific) ── -->
+        <div class="hero-actions hero-logged-in" id="heroLoggedIn">
+            <span id="heroActions" style="display:flex; gap:1rem; flex-wrap:wrap;"></span>
+        </div>
+    </div>
+    <div class="hero-image"></div>
+</header>
+
+<!-- ═══════════ STATS ═══════════ -->
+<section class="stats">
+    <div class="stat-item">
+        <h3>50K+</h3>
+        <p>Meals Rescued</p>
+    </div>
+    <div class="stat-item">
+        <h3>34</h3>
+        <p>Partner NGOs — AP</p>
+    </div>
+    <div class="stat-item">
+        <h3>15 Tons</h3>
+        <p>CO2 Prevented</p>
+    </div>
+    <div class="stat-item">
+        <h3>100%</h3>
+        <p>AI Matched</p>
+    </div>
+</section>
+
+<!-- ═══════════ FEATURES ═══════════ -->
+<section id="features">
+    <div class="section-header">
+        <h2>How FoodLink AI Works</h2>
+        <p>Our platform uses advanced algorithms to make food donation seamless, efficient, and impactful.</p>
+    </div>
+    <div class="features-grid">
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fa-solid fa-brain"></i></div>
+            <h3>Smart Matching</h3>
+            <p>Our AI instantly pairs your donation with the nearest NGO that has the capacity and specific need for your food items.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fa-solid fa-location-dot"></i></div>
+            <h3>Location Services</h3>
+            <p>Built-in geolocation ensures optimized routing for pickup, reducing transit times and preserving food freshness.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fa-solid fa-chart-pie"></i></div>
+            <h3>Real-time Analytics</h3>
+            <p>Track your environmental and social impact with a comprehensive dashboard showing exactly where your food goes.</p>
+        </div>
+        <div class="feature-card">
+            <div class="feature-icon"><i class="fa-solid fa-bell"></i></div>
+            <h3>Instant Alerts</h3>
+            <p>Get push notifications when your donation is matched, picked up, and safely delivered to the community.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════ HOW IT WORKS ═══════════ -->
+<section style="background: var(--surface); padding: 5rem 5%;">
+    <div class="section-header">
+        <h2>Three Simple Steps</h2>
+        <p>From surplus food to someone's meal — in minutes.</p>
+    </div>
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:2rem; max-width:900px; margin:0 auto; text-align:center;">
+        <div>
+            <div style="width:60px;height:60px;border-radius:50%;background:rgba(16,185,129,0.1);color:var(--primary,#10b981);display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin:0 auto 1rem;">
+                <i class="fa-solid fa-user-plus"></i>
+            </div>
+            <h3 style="font-size:1.1rem;margin-bottom:0.5rem;">1. Register</h3>
+            <p style="font-size:0.9rem;color:var(--text-muted,#64748b);">Create a free donor or NGO account in under a minute.</p>
+        </div>
+        <div>
+            <div style="width:60px;height:60px;border-radius:50%;background:rgba(59,130,246,0.1);color:#3b82f6;display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin:0 auto 1rem;">
+                <i class="fa-solid fa-box-open"></i>
+            </div>
+            <h3 style="font-size:1.1rem;margin-bottom:0.5rem;">2. List Your Food</h3>
+            <p style="font-size:0.9rem;color:var(--text-muted,#64748b);">Tell us what you have, how much, and when it expires.</p>
+        </div>
+        <div>
+            <div style="width:60px;height:60px;border-radius:50%;background:rgba(245,158,11,0.1);color:#f59e0b;display:flex;align-items:center;justify-content:center;font-size:1.4rem;margin:0 auto 1rem;">
+                <i class="fa-solid fa-robot"></i>
+            </div>
+            <h3 style="font-size:1.1rem;margin-bottom:0.5rem;">3. AI Does the Rest</h3>
+            <p style="font-size:0.9rem;color:var(--text-muted,#64748b);">We match, notify, and coordinate pickup with the nearest NGO.</p>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════ CTA BAND ═══════════ -->
+<section style="background: #0f172a; padding: 4rem 5%; text-align:center;" id="ctaBand">
+    <!-- Shown when NOT logged in -->
+    <div id="ctaLoggedOut">
+        <h2 style="color:white; margin-bottom:0.75rem; font-size:2rem;">Ready to make an impact?</h2>
+        <p style="color:#94a3b8; margin-bottom:2rem;">Join hundreds of food donors and NGOs already on FoodLink AI.</p>
+        <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+            <a href="auth.html" class="btn btn-primary btn-lg">
+                <i class="fa-solid fa-right-to-bracket"></i> Sign In / Sign Up
+            </a>
+        </div>
+    </div>
+    <!-- Shown when logged in -->
+    <div id="ctaLoggedIn" style="display:none;">
+        <h2 style="color:white; margin-bottom:0.75rem; font-size:2rem;">Welcome back! 👋</h2>
+        <p style="color:#94a3b8; margin-bottom:2rem;">You're already making a difference. Keep it going.</p>
+        <div style="display:flex; gap:1rem; justify-content:center; flex-wrap:wrap;">
+            <a href="dashboard.html" class="btn btn-primary btn-lg" id="ctaDashBtn">
+                <i class="fa-solid fa-chart-line"></i> Dashboard
+            </a>
+        </div>
+    </div>
+</section>
+
+<!-- ═══════════ FOOTER ═══════════ -->
+<footer style="background: var(--surface); padding: 3rem 5%; border-top: 1px solid var(--border); text-align: center;">
+    <div class="logo" style="justify-content: center; margin-bottom: 1rem;">
+        <i class="fa-solid fa-leaf"></i> FoodLink AI
+    </div>
+    <p style="color: var(--text-muted); margin-bottom: 0.5rem;">Revolutionizing food rescue through artificial intelligence.</p>
+    <p style="color: var(--text-muted); font-size: 0.85rem;">&copy; 2026 FoodLink AI. All rights reserved.</p>
+</footer>
+
+<script src="script.js"></script>
+<script>
+/* ═══════════════════════════════════════════════════════
+   INDEX.HTML — Auth-aware navbar & hero
+   Logic:
+     • Read token + user from localStorage
+     • If NOT logged in  → show Login/SignUp only
+     • If logged in      → show role-specific links + avatar
+   ═══════════════════════════════════════════════════════ */
+(function () {
+    const token = localStorage.getItem('foodlink_token');
+    const user  = JSON.parse(localStorage.getItem('foodlink_user') || '{}');
+    const isLoggedIn = !!(token && user && user.name);
+    const role = user.role || 'donor';
+
+    function show(id, displayStyle = 'flex') {
+        const el = document.getElementById(id);
+        if (el) el.style.display = displayStyle;
+    }
+    
+    function hide(id) {
+        const el = document.getElementById(id);
+        if (el) el.style.display = 'none';
+    }
+
+    if (!isLoggedIn) {
+        /* ── LOGGED OUT ── */
+        show('navLoginBtn', 'inline-block');
+        hide('navDashboardLink');
+        hide('navDonateLink');
+        hide('navLoggedIn');
+        
+        show('heroLoggedOut');
+        hide('heroLoggedIn');
+        
+        // CTA band
+        show('ctaLoggedOut', 'block');
+        hide('ctaLoggedIn');
+
+    } else {
+        /* ── LOGGED IN ── */
+        hide('navLoginBtn');
+        show('navLoggedIn');
+        
+        show('navDashboardLink', 'inline-block');
+        if (role === 'donor') {
+             show('navDonateLink', 'inline-block');
+             document.getElementById('navDonateLink').textContent = 'Donate Food';
+             document.getElementById('navDonateLink').href = 'donate.html';
+             document.getElementById('navDashboardLink').href = 'dashboard.html';
+             
+             document.getElementById('heroActions').innerHTML = `
+                 <a href="donate.html" class="btn btn-primary"><i class="fa-solid fa-box-open"></i> Donate Food Now</a>
+                 <a href="dashboard.html" class="btn btn-outline"><i class="fa-solid fa-chart-line"></i> My Dashboard</a>
+             `;
+        } else if (role === 'ngo') {
+             show('navDonateLink', 'inline-block');
+             document.getElementById('navDonateLink').textContent = 'Track Cargo';
+             document.getElementById('navDonateLink').href = 'ngo-dashboard.html';
+             document.getElementById('navDashboardLink').href = 'ngo-dashboard.html';
+             
+             document.getElementById('heroActions').innerHTML = `
+                 <a href="ngo-dashboard.html" class="btn btn-primary"><i class="fa-solid fa-building-ngo"></i> NGO Dashboard</a>
+             `;
+        } else if (role === 'admin') {
+             document.getElementById('navDashboardLink').href = 'admin.html';
+             document.getElementById('heroActions').innerHTML = `
+                 <a href="admin.html" class="btn btn-primary"><i class="fa-solid fa-shield-halved"></i> Admin Panel</a>
+             `;
+        }
+        show('heroLoggedIn');
+        hide('heroLoggedOut');
+
+        // Set avatar + name
+        const initials = user.name.split(' ').map(w => w[0]).join('').toUpperCase().slice(0, 2);
+        document.getElementById('navAvatar').textContent   = initials;
+        document.getElementById('navUserName').textContent = user.name;
+
+        // CTA band
+        hide('ctaLoggedOut');
+        show('ctaLoggedIn', 'block');
+        if (role === 'ngo') {
+            document.getElementById('ctaDashBtn').href = 'ngo-dashboard.html';
+        } else if (role === 'admin') {
+            document.getElementById('ctaDashBtn').href = 'admin.html';
+        } else {
+            document.getElementById('ctaDashBtn').href = 'dashboard.html';
+        }
+
+        // Logout button
+        document.getElementById('navLogoutBtn').addEventListener('click', function (e) {
+            e.preventDefault();
+            localStorage.removeItem('foodlink_token');
+            localStorage.removeItem('foodlink_user');
+            window.location.reload();
+        });
+    }
+})();
+</script>
+
+</body>
+</html>
